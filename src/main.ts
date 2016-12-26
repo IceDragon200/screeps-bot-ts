@@ -1,6 +1,7 @@
 import HarvesterRole from './role.harvester';
 import UpgraderRole from './role.upgrader';
 import BuilderRole from './role.builder';
+import RepairerRole from './role.repairer';
 import Supervisor from './supervisor';
 import Hive from './hive';
 
@@ -29,6 +30,9 @@ export const loop = function() {
           break;
         case 'builder':
           BuilderRole.run(creep);
+          break;
+        case 'repairer':
+          RepairerRole.run(creep);
           break;
         default:
           creep.memory.idle++;
