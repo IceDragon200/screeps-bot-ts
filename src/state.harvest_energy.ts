@@ -10,7 +10,7 @@ namespace HarvestEnergyStep {
 				}
 				creep.memory.idle = 0;
 			} else {
-				creep.say("sleeping");
+				creep.say("waiting");
 				creep.memory.sleeping = 5;
 				creep.memory.idle++;
 			}
