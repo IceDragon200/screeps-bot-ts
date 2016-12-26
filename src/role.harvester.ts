@@ -8,9 +8,10 @@ namespace HarvesterRole {
 				creep.say('transfering');
 				creep.memory.state = 'transfer';
 			case 'transfer':
-				const targets = <(StructureExtension | Spawn)[]>creep.room.find(FIND_STRUCTURES, {
+				const target = <Structure>creep.pos.findClosestByPath(FIND_STRUCTURES, {
 					filter: (st) => {
 						switch (st.structureType) {
+							case STRUCTURE_STORAGE:
 							case STRUCTURE_EXTENSION:
 							case STRUCTURE_SPAWN:
 								return st.energy < st.energyCapacity;
@@ -19,13 +20,7 @@ namespace HarvesterRole {
 						}
 					}
 				});
-				if (targets.length > 0) {
-					let target = targets[0];
-					targets.forEach((t) => {
-						if (t.energy < target.energy) {
-							target = t;
-						}
-					});
+				if (target) {
 					if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
 						creep.moveTo(target);
 					}
@@ -44,7 +39,7 @@ namespace HarvesterRole {
 				}
 
 				if (creep.carry.energy <= 0) {
-					creep.say('need energy');
+					creep.say('need en');
 					creep.memory.state = 'harvest.energy';
 				}
 				break;
