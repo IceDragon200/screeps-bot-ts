@@ -31,10 +31,14 @@ namespace Supervisor {
 	 * jobs
 	 */
 	function roleCall() {
-		for (let name in Game.creeps) {
-			if (!Game.creeps[name]) {
-				delete Game.creeps[name];
+		if (--Memory['gcTimer'] < 0) {
+			for (let name in Memory['creeps']) {
+				if (!Game.creeps[name]) {
+					console.log(`GC-ed ${name}`);
+					delete Memory['creeps'][name];
+				}
 			}
+			Memory['gcTimer'] = 60;
 		}
 
 		const workersByRole = {};
