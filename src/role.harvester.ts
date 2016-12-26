@@ -1,20 +1,12 @@
+import HarvestEnergyStep from "./state.harvest_energy";
+
 namespace HarvesterRole {
 	/** @param {Creep} creep **/
-	export function run(creep) {
+	export function run(creep: Creep) {
 		if (creep.carry.energy < creep.carryCapacity) {
-			const source = creep.pos.findClosestByPath(FIND_SOURCES);
-			if (source) {
-				if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-					creep.moveTo(source);
-				}
-				creep.memory.idle = 0;
-			} else {
-				creep.say("sleeping");
-				creep.memory.sleeping = 5;
-				creep.memory.idle++;
-			}
+			HarvestEnergyStep.run(creep);
 		} else {
-			const targets = creep.room.find(FIND_STRUCTURES, {
+			const targets = <(StructureExtension | Spawn)[]>creep.room.find(FIND_STRUCTURES, {
 				filter: (st) => {
 					switch (st.structureType) {
 						case STRUCTURE_EXTENSION:
