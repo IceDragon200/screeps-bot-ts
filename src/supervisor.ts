@@ -63,7 +63,7 @@ namespace Supervisor {
 				creep.memory.role = neededRole(workersByRole, oldRole);
 
 				if (oldRole !== creep.memory.role) {
-					console.log(`Reassigning Idling Creep from '${oldRole}' to '${creep.memory.role}'`);
+					console.log(`Moved idling creep from '${oldRole}' to '${creep.memory.role}'`);
 					creep.say(creep.memory.role);
 					workersByRole[oldRole] = _.reject(workersByRole[oldRole], (c) => {
 						return c.id === creep.id;
@@ -86,7 +86,7 @@ namespace Supervisor {
 		});
 	}
 
-	function layRoadsFromTo(objs: RoomObject[], targets) {
+	function layRoadsFromTo(objs: RoomObject[], targets: RoomObject[]) {
 		objs.forEach((obj) => {
 			targets.forEach((tr) => {
 				const path = obj.pos.findPathTo(tr.pos.x, tr.pos.y, {
@@ -101,7 +101,7 @@ namespace Supervisor {
 		});
 	}
 
-	function spawnWorkerOfRole(spawner, workersByRole, role) {
+	function spawnWorkerOfRole(spawner: Spawn, workersByRole, role) {
 		const genomes = Hive.GenomesByRole[role];
 		const lv = Math.min(Math.max(0, spawner.room.controller.level - 1), genomes.length - 1);
 		const genome = genomes[lv];

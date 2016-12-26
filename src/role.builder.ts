@@ -25,7 +25,7 @@ namespace BuilderRole {
 				}
 
 				if (creep.carry.energy <= 0) {
-					creep.say('need energy');
+					creep.say('need en');
 					creep.memory.state = 'harvest.energy';
 				}
 				break;
