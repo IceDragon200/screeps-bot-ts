@@ -28,6 +28,7 @@ namespace BuilderRole {
 					creep.say('need energy');
 					creep.memory.state = 'harvest.energy';
 				}
+				break;
 			default:
 				creep.memory.state = HarvestEnergyStep.run(creep, 'enter.build');
 		}
