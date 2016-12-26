@@ -7,16 +7,11 @@ namespace UpgraderRole {
 			case 'enter.upgrade':
 				creep.say('upgrading');
 				creep.memory.state = 'upgrade';
-				break;
 			case 'upgrade':
-				if (creep.memory.upgrading) {
-					if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-						creep.moveTo(creep.room.controller);
-					}
-					creep.memory.idle = 0;
-				} else {
-					HarvestEnergyStep.run(creep);
+				if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+					creep.moveTo(creep.room.controller);
 				}
+				creep.memory.idle = 0;
 
 				if (creep.carry.energy <= 0) {
 					creep.say('need energy');

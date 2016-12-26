@@ -23,6 +23,11 @@ namespace BuilderRole {
 					creep.memory.sleeping = 5;
 					creep.memory.idle++;
 				}
+
+				if (creep.carry.energy <= 0) {
+					creep.say('need energy');
+					creep.memory.state = 'harvest.energy';
+				}
 			default:
 				creep.memory.state = HarvestEnergyStep.run(creep, 'enter.build');
 		}
