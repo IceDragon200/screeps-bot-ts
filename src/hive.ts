@@ -4,10 +4,10 @@ namespace Hive {
 
 	export const idleLimit = 20;
 	export const PopulationCap = {
-		harvester: [3, 5],
-		upgrader: [3, 5],
-		builder: [4, 5],
-		repairer: [2, 4],
+		harvester: [6, 8],
+		upgrader: [3, 4],
+		builder: [6, 8],
+		repairer: [2, 3],
 		idler: [1, 1]
 	};
 	export const Roles = ['harvester', 'upgrader', 'builder', 'repairer', 'idler'];
