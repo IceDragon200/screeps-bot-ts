@@ -1,5 +1,5 @@
 namespace HarvestEnergyStep {
-	export function run(creep: Creep) {
+	export function run(creep: Creep, nextState = "next") {
 		if (creep.carry.energy < creep.carryCapacity) {
 			const source = <Source>creep.pos.findClosestByPath(FIND_SOURCES, {
 				ignoreCreeps: false
@@ -14,6 +14,10 @@ namespace HarvestEnergyStep {
 				creep.memory.sleeping = 5;
 				creep.memory.idle++;
 			}
+			return "harvest.energy";
+		} else {
+			creep.say('energized!');
+			return nextState;
 		}
 	}
 }

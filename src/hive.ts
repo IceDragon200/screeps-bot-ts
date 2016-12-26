@@ -1,5 +1,5 @@
 namespace Hive {
-	export const debug = true;
+	export const debug = false;
 	export const sleepy = false;
 
 	export const idleLimit = 20;

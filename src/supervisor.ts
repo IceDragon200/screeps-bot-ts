@@ -90,7 +90,9 @@ namespace Supervisor {
 		objs.forEach((obj) => {
 			targets.forEach((tr) => {
 				const path = obj.pos.findPathTo(tr.pos.x, tr.pos.y, {
-					ignoreCreeps: true
+					ignoreCreeps: true,
+					ignoreRoads: true,
+					ignoreDestructibleStructures: true
 				});
 				path.forEach((p) => {
 					obj.room.createConstructionSite(p.x, p.y, STRUCTURE_ROAD);
