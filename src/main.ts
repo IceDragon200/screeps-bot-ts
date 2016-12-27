@@ -54,10 +54,10 @@ export const loop = function() {
     }
 
     if (creep.memory.idle >= Hive.idleLimit) {
-      if (creep.memory.role !== 'idler') {
-        creep.memory.role = 'idler';
-        console.log(`${creep.memory.role} is now an idler`);
-      }
+      //if (creep.memory.role !== 'idler') {
+        //creep.memory.role = 'idler';
+        //console.log(`${creep.memory.role} is now an idler`);
+      //}
       creep.say("idling");
     }
   }
