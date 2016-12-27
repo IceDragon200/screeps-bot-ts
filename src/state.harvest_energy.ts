@@ -1,7 +1,9 @@
+import Hive from "./hive";
+
 namespace HarvestEnergyStep {
 	export function run(creep: Creep, currentState, nextState) {
 		if (creep.carry.energy < creep.carryCapacity) {
-			const source = <Source>creep.pos.findClosestByPath(FIND_SOURCES, {
+			const source = <Source>Hive.findBy(creep.pos, FIND_SOURCES, {
 				ignoreCreeps: false
 			});
 			if (source) {
