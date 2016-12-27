@@ -60,6 +60,9 @@ namespace Supervisor {
 		for (let name in Game.creeps) {
 			const creep = Game.creeps[name];
 			const role = creep.memory.role;
+			if (!workersByRole[role]) {
+				workersByRole[role] = [];
+			}
 			workersByRole[role].push(creep);
 		}
 
@@ -179,7 +182,7 @@ namespace Supervisor {
 				spawner.memory.sleeping = 10;
 			};
 		}
-		return workersByRole
+		return workersByRole;
 	}
 
 	export function run() {

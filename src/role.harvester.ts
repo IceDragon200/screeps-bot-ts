@@ -1,50 +1,21 @@
-import HarvestEnergyStep from "./state.harvest_energy";
+import HarvestEnergyState from "./state.harvest_energy";
+import TransportEnergyState from "./state.transport_energy";
 
+/**
+ * Does both the job of a miner and transporter
+ */
 namespace HarvesterRole {
 	/** @param {Creep} creep **/
 	export function run(creep: Creep) {
 		switch (creep.memory.state) {
-			case 'enter.transfer':
-				creep.say('transfering');
-				creep.memory.state = 'transfer';
-			case 'transfer':
-				const target = <Structure>creep.pos.findClosestByPath(FIND_STRUCTURES, {
-					filter: (st) => {
-						switch (st.structureType) {
-							case STRUCTURE_STORAGE:
-							case STRUCTURE_EXTENSION:
-							case STRUCTURE_SPAWN:
-								return st.energy < st.energyCapacity;
-							default:
-								return false;
-						}
-					}
-				});
-				if (target) {
-					if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-						creep.moveTo(target);
-					}
-					creep.memory.idle = 0;
-				} else {
-					if (creep.memory.idle++ > 20) {
-						const flags = _.filter(Game.flags, (f) => {
-							return f.name === "idlers.corner";
-						});
-
-						if (flags.length > 0) {
-							console.log("Moving to idlers corner");
-							creep.moveTo(flags[0]);
-						}
-					}
-				}
-
-				if (creep.carry.energy <= 0) {
-					creep.say('need en');
-					creep.memory.state = 'harvest.energy';
-				}
+			case 'enter.transport.energy':
+				creep.say('transport');
+				creep.memory.state = 'transport.energy';
+			case 'transport.energy':
+				creep.memory.state = TransportEnergyState.run(creep, 'transport.energy', 'harvest.energy');
 				break;
 			default:
-				creep.memory.state = HarvestEnergyStep.run(creep, 'enter.transfer');
+				creep.memory.state = FindEnergyState.run(creep, 'find.energy', 'enter.transport.energy');
 		}
 	}
 };

@@ -4,20 +4,24 @@ namespace Hive {
 
 	export const idleLimit = 20;
 	export const PopulationCap = {
-		harvester: [6, 12],
+		//harvester: [0, 2],
+		miner: [9, 12],
+		transporter: [9, 12],
 		upgrader: [3, 9],
 		builder: [6, 12],
 		repairer: [2, 6],
 		idler: [1, 1]
 	};
-	export const Roles = ['harvester', 'upgrader', 'builder', 'repairer', 'idler'];
+	export const Roles = Object.keys(PopulationCap);
 
 	export const RoleWeight = {
-		harvester: 10,
+		miner: 10,
+		transporter: 8,
 		upgrader: 5,
 		builder: 3,
 		repairer: 2,
-		idler: 1
+		idler: 1,
+		harvester: 0
 	};
 
 	export const basicWorker = [WORK, MOVE, CARRY];
@@ -28,6 +32,12 @@ namespace Hive {
 		harvester: [
 			basicWorker,
 			superHarvester
+		],
+		miner: [
+			[MOVE, WORK, WORK]
+		],
+		transporter: [
+			[MOVE, MOVE, CARRY]
 		],
 		upgrader: [
 			basicWorker

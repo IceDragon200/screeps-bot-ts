@@ -1,4 +1,4 @@
-import HarvestEnergyStep from "./state.harvest_energy";
+import FindEnergyState from "./state.find_energy";
 
 namespace BuilderRole {
 	/**
@@ -30,7 +30,7 @@ namespace BuilderRole {
 				}
 				break;
 			default:
-				creep.memory.state = HarvestEnergyStep.run(creep, 'enter.build');
+				creep.memory.state = FindEnergyState.run(creep, 'find.energy', 'enter.build');
 		}
 	}
 };

@@ -1,7 +1,9 @@
-import HarvesterRole from './role.harvester';
-import UpgraderRole from './role.upgrader';
 import BuilderRole from './role.builder';
+import HarvesterRole from './role.harvester';
+import MinerRole from './role.miner';
 import RepairerRole from './role.repairer';
+import TransporterRole from './role.transporter';
+import UpgraderRole from './role.upgrader';
 import Supervisor from './supervisor';
 import Hive from './hive';
 
@@ -24,6 +26,12 @@ export const loop = function() {
       switch (creep.memory.role) {
         case 'harvester':
           HarvesterRole.run(creep);
+          break;
+        case 'transporter':
+          TransporterRole.run(creep);
+          break;
+        case 'miner':
+          MinerRole.run(creep);
           break;
         case 'upgrader':
           UpgraderRole.run(creep);

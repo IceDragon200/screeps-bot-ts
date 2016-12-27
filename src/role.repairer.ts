@@ -1,4 +1,5 @@
-import HarvestEnergyStep from "./state.harvest_energy";
+import FindEnergyState from "./state.find_energy";
+import RepairState from "./state.repair";
 
 namespace RepairerRole {
 	/**
@@ -10,45 +11,10 @@ namespace RepairerRole {
 				creep.say('repairing');
 				creep.memory.state = 'repair';
 			case 'repair':
-				let damaged = <Structure>creep.pos.findClosestByPath(FIND_STRUCTURES, {
-					filter: (s: Structure) => {
-						if (s.structureType === STRUCTURE_WALL) {
-							// ignore walls, they are low priority
-							return false;
-						} else {
-							return (s.hits / s.hitsMax) < 0.95;
-						}
-					}
-				});
-
-				if (!damaged) {
-					// if we didn't find something damaged, try doing a wall instead
-					let damaged = <Structure>creep.pos.findClosestByPath(FIND_STRUCTURES, {
-						filter: (s: Structure) => {
-							if (s.structureType === STRUCTURE_WALL) {
-								return (s.hits / s.hitsMax) < 0.95;
-							} else {
-								return false;
-							}
-						}
-					});
-				}
-
-				if (damaged) {
-					if (creep.repair(damaged) === ERR_NOT_IN_RANGE) {
-						creep.moveTo(damaged);
-					}
-					creep.memory.idle = 0;
-				} else {
-					creep.memory.idle++;
-				}
-				if (creep.carry.energy <= 0) {
-					creep.say('need en');
-					creep.memory.state = 'harvest.energy';
-				}
+				creep.memory.state = RepairState.run(creep, 'repair', 'find.energy');
 				break;
 			default:
-				creep.memory.state = HarvestEnergyStep.run(creep, 'enter.repair');
+				creep.memory.state = FindEnergyState.run(creep, 'find.energy', 'enter.repair');
 		}
 	}
 }

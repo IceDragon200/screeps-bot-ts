@@ -1,4 +1,4 @@
-import HarvestEnergyStep from "./state.harvest_energy";
+import FindEnergyState from "./state.find_energy";
 
 namespace UpgraderRole {
 	/** @param {Creep} creep **/
@@ -15,11 +15,11 @@ namespace UpgraderRole {
 
 				if (creep.carry.energy <= 0) {
 					creep.say('need en');
-					creep.memory.state = 'harvest.energy';
+					creep.memory.state = 'find.energy';
 				}
 				break;
 			default:
-				creep.memory.state = HarvestEnergyStep.run(creep, 'enter.upgrade');
+				creep.memory.state = FindEnergyState.run(creep, 'find.energy', 'enter.upgrade');
 		}
 	}
 };
