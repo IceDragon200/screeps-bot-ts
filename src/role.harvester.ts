@@ -15,7 +15,7 @@ namespace HarvesterRole {
 				creep.memory.state = TransportEnergyState.run(creep, 'transport.energy', 'harvest.energy');
 				break;
 			default:
-				creep.memory.state = FindEnergyState.run(creep, 'find.energy', 'enter.transport.energy');
+				creep.memory.state = HarvestEnergyState.run(creep, 'find.energy', 'enter.transport.energy');
 		}
 	}
 };
