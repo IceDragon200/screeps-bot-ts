@@ -1,10 +1,13 @@
+import Hive from "./hive";
+
 namespace RepairState {
 	export function run(creep: Creep, currentState, nextState) {
-		let damaged = <Structure>creep.pos.findClosestByPath(FIND_STRUCTURES, {
+		let damaged = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 			filter: (s: Structure) => {
 				if (s.structureType === STRUCTURE_WALL) {
-					// ignore walls, they are low priority
-					return false;
+					// ignore walls, they are low priority (unless it's below 5%)
+					//return (s.hits / s.hitsMax) < 0.05;
+					return s.hits < 40000;
 				} else {
 					return (s.hits / s.hitsMax) < 0.95;
 				}
@@ -13,7 +16,7 @@ namespace RepairState {
 
 		if (!damaged) {
 			// if we didn't find something damaged, try doing a wall instead
-			let damaged = <Structure>creep.pos.findClosestByPath(FIND_STRUCTURES, {
+			let damaged = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 				filter: (s: Structure) => {
 					if (s.structureType === STRUCTURE_WALL) {
 						return (s.hits / s.hitsMax) < 0.95;
