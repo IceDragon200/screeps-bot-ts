@@ -1,12 +1,23 @@
+import Hive from "./hive";
 import MineEnergyState from "./state.mine_energy";
 
 namespace MinerRole {
-	export function run(creep: Creep) {
+	function dropEnergy(creep: Creep) {
 		if (creep.carry) {
-			if (creep.carry.energy > 0) {
-				creep.drop(RESOURCE_ENERGY);
+			if (Hive.sloppyMiners) {
+				if (creep.carry.energy >= 0) {
+					creep.drop(RESOURCE_ENERGY);
+				}
+			} else {
+				if (creep.carry.energy >= creep.carryCapacity) {
+					creep.drop(RESOURCE_ENERGY);
+				}
 			}
 		}
+	}
+
+	export function run(creep: Creep) {
+		dropEnergy(creep);
 		creep.memory.state = MineEnergyState.run(creep, 'mine.energy');
 	}
 }
