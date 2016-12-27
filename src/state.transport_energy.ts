@@ -1,20 +1,38 @@
+import Hive from "./hive";
+
 namespace TransportEnergyState {
 	export function run(creep: Creep, currentState, nextState) {
-		const target = <Structure>creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-			filter: (st) => {
+		const target = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
+			filter: (st: Structure) => {
 				switch (st.structureType) {
+					case STRUCTURE_CONTAINER:
 					case STRUCTURE_STORAGE:
+						const con = <StructureContainer | StructureStorage>st;
+						return con.store[RESOURCE_ENERGY] < con.storeCapacity;
 					case STRUCTURE_EXTENSION:
 					case STRUCTURE_SPAWN:
-						return st.energy < st.energyCapacity;
+						if (st instanceof OwnedStructure) {
+							const sp = <StructureSpawn | StructureExtension>st;
+							return sp.energy < sp.energyCapacity;
+						} else {
+							return false;
+						}
 					default:
 						return false;
 				}
 			}
 		});
 		if (target) {
-			if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-				creep.moveTo(target);
+			switch (creep.transfer(target, RESOURCE_ENERGY)) {
+				case OK:
+					creep.say("filling");
+					break;
+				case ERR_FULL:
+					creep.say("its full");
+					break;
+				case ERR_NOT_IN_RANGE:
+					creep.moveTo(target);
+					break;
 			}
 			creep.memory.idle = 0;
 		} else {
