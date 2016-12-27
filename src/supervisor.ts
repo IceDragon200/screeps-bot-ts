@@ -4,11 +4,21 @@
  */
 import Hive from "./hive";
 
+type IWorkersByRole = {[role: string]: Creep[]};
+
 namespace Supervisor {
 	const population = Hive.PopulationCap;
 
+	function prioritizedRoles(roles: string[], workersByRole: IWorkersByRole) {
+		return _.sortBy(_.clone(roles), (role) => {
+			return workersByRole[role].length;
+		});
+	}
+
 	function neededRole(workersByRole, oldRole) {
-		for (let role in population) {
+		const roles = prioritizedRoles(Hive.Roles, workersByRole);
+		for (let i in roles) {
+			const role = roles[i];
 			if (role === "idler") continue;
 
 			let [mn, mx] = population[role];
@@ -34,14 +44,14 @@ namespace Supervisor {
 		if (--Memory['gcTimer'] < 0) {
 			for (let name in Memory['creeps']) {
 				if (!Game.creeps[name]) {
-					console.log(`GC-ed ${name}`);
 					delete Memory['creeps'][name];
+					console.log(`Cremated ${name}`);
 				}
 			}
 			Memory['gcTimer'] = 60;
 		}
 
-		const workersByRole = {};
+		const workersByRole: IWorkersByRole = {};
 		Hive.Roles.forEach(function(role) {
 			workersByRole[role] = [];
 		});
@@ -50,16 +60,13 @@ namespace Supervisor {
 		for (let name in Game.creeps) {
 			const creep = Game.creeps[name];
 			const role = creep.memory.role;
-			if (!workersByRole[role]) {
-				workersByRole[role] = [];
-			}
 			workersByRole[role].push(creep);
 		}
 
 		for (let name in Game.creeps) {
 			const creep = Game.creeps[name];
 			if (creep.memory.role === 'idler') {
-				const oldRole = creep.memory.role;
+				const oldRole: string = creep.memory.role;
 				creep.memory.role = neededRole(workersByRole, oldRole);
 
 				if (oldRole !== creep.memory.role) {
@@ -91,7 +98,7 @@ namespace Supervisor {
 			targets.forEach((tr) => {
 				const path = obj.pos.findPathTo(tr.pos.x, tr.pos.y, {
 					ignoreCreeps: true,
-					ignoreRoads: true,
+					ignoreRoads: false,
 					ignoreDestructibleStructures: true
 				});
 				path.forEach((p) => {
@@ -158,8 +165,9 @@ namespace Supervisor {
 
 			if (spawner.spawning) continue;
 
-			for (let i in Hive.Roles) {
-				const role = Hive.Roles[i];
+			const roles = prioritizedRoles(Hive.Roles, workersByRole);
+			for (let i in roles) {
+				const role = roles[i];
 				let [mn, _mx] = population[role];
 				if (workersByRole[role].length >= mn) {
 					continue;
