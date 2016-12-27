@@ -14,7 +14,7 @@ namespace HarvestEnergyStep {
 				creep.memory.sleeping = 5;
 				creep.memory.idle++;
 			}
-			return "harvest.energy";
+			return nextState;
 		} else {
 			creep.say('energized!');
 			return currentState;

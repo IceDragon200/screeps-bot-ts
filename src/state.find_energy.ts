@@ -20,6 +20,7 @@ namespace FindEnergyState {
 		}
 
 		if (creep.carry.energy > 0) {
+			creep.say('got en');
 			return nextState;
 		}
 		return currentState;

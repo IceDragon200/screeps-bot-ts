@@ -1,4 +1,5 @@
 import FindEnergyState from "./state.find_energy";
+import BuildState from "./state.build";
 
 namespace BuilderRole {
 	/**
@@ -10,24 +11,7 @@ namespace BuilderRole {
 				creep.say('building');
 				creep.memory.state = 'build';
 			case 'build':
-				const target = <ConstructionSite>creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES, {
-					ignoreCreeps: false
-				});
-
-				if (target) {
-					if (creep.build(target) == ERR_NOT_IN_RANGE) {
-						creep.moveTo(target);
-					}
-					creep.memory.idle = 0;
-				} else {
-					creep.memory.sleeping = 5;
-					creep.memory.idle++;
-				}
-
-				if (creep.carry.energy <= 0) {
-					creep.say('need en');
-					creep.memory.state = 'harvest.energy';
-				}
+				creep.memory.state = BuildState.run(creep, 'build', 'find.energy');
 				break;
 			default:
 				creep.memory.state = FindEnergyState.run(creep, 'find.energy', 'enter.build');

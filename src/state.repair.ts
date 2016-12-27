@@ -34,7 +34,7 @@ namespace RepairState {
 		}
 		if (creep.carry.energy <= 0) {
 			creep.say('need en');
-			creep.memory.state = nextState;
+			return nextState;
 		}
 		return currentState;
 	}
