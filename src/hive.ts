@@ -75,18 +75,6 @@ namespace Hive {
 		//return obj.findClosestByRange.apply(obj, rest);
 	}
 
-	export function creepBurial() {
-		if (--Memory['gcTimer'] < 0) {
-			for (let name in Memory['creeps']) {
-				if (!Game.creeps[name]) {
-					delete Memory['creeps'][name];
-					console.log(`Buried ${name}`);
-				}
-			}
-			Memory['gcTimer'] = 60;
-		}
-	}
-
 	export function updateAllByRole(role, cb) {
 		for (let name in Game.creeps) {
 			const creep: Creep = Game.creeps[name];
@@ -113,13 +101,6 @@ namespace Hive {
 			creepsByRole[role].push(creep);
 		}
 		return creepsByRole;
-	}
-
-	export function reportCreepsByRole(creepsByRole) {
-		Roles.forEach(function(role) {
-			const [mn, mx] = PopulationCap[role];
-			console.log(`Workers available ${role}: ${creepsByRole[role].length} / ${mn} / ${mx}`);
-		});
 	}
 
 	export function prioritizedRoles(roles: string[], creepsByRole: ICreepsByRole): string[] {

@@ -43,7 +43,6 @@ namespace CreepSupervisor {
 	}
 
 	export function run() {
-		Hive.creepBurial();
 		let creepsByRole = Hive.groupCreepsByRole();
 		if (reassignIdlers(creepsByRole['idler'], creepsByRole) > 0) {
 			creepsByRole = Hive.groupCreepsByRole();

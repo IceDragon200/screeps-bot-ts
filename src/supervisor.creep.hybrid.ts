@@ -1,4 +1,5 @@
 import Hive from "./hive";
+import CreepRegistrar from "./registrar.creep";
 
 /**
  * A slightly overly complex and ineffecient supervisor, but tries it's hardest to balance the spawns
@@ -113,11 +114,10 @@ namespace HybridCreepSupervisor {
 	}
 
 	export function run() {
-		Hive.creepBurial();
 		let creepsByRole = roleCall();
 		creepsByRole = executeSpawners(creepsByRole);
 		if (Hive.debug) {
-			Hive.reportCreepsByRole(creepsByRole);
+			CreepRegistrar.reportCreepsByRole(creepsByRole);
 		}
 	}
 }

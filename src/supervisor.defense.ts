@@ -1,3 +1,6 @@
+/**
+ * The defense supervisor controls all owned towers.
+ */
 namespace DefenseSupervisor {
 	function tryAttackHostiles(tower: StructureTower): boolean {
 		const hostile = <Creep>tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
@@ -5,7 +8,6 @@ namespace DefenseSupervisor {
 			switch (tower.attack(hostile)) {
 				case OK:
 					return true;
-				case ERR_NOT_ENOUGH_RESOURCES:
 				default:
 					return false;
 			}
