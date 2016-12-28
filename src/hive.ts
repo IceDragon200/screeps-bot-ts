@@ -62,6 +62,9 @@ namespace Hive {
 		repairer: [
 			fastWorker
 		],
+		claimer: [
+			[MOVE, CLAIM]
+		],
 		idler: [
 			basicWorker
 		]
