@@ -1,5 +1,8 @@
 import Hive from "./hive";
 
+/**
+ * Fills target structures with energy
+ */
 namespace TransportEnergyState {
 	export function run(creep: Creep, currentState, nextState) {
 		const target = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
@@ -17,6 +20,9 @@ namespace TransportEnergyState {
 						} else {
 							return false;
 						}
+					case STRUCTURE_TOWER:
+						const tow = <StructureTower>st;
+						return tow.energy < tow.energyCapacity;
 					default:
 						return false;
 				}
