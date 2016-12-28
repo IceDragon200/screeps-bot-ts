@@ -59,7 +59,7 @@ namespace HybridCreepSupervisor {
 		return creepsByRole;
 	}
 
-	function spawnWorkerOfRole(spawner: Spawn, creepsByRole: Hive.ICreepsByRole, role: string) {
+	function spawnWorkerOfRole(spawner: StructureSpawn, creepsByRole: Hive.ICreepsByRole, role: string) {
 		const genomes = Hive.GenomesByRole[role];
 		const lv = Math.min(Math.max(0, spawner.room.controller.level - 1), genomes.length - 1);
 		const genome = genomes[lv];
@@ -86,7 +86,7 @@ namespace HybridCreepSupervisor {
 		return false;
 	}
 
-	function executeSpawners(creepsByRole) {
+	function executeSpawners(creepsByRole: Hive.ICreepsByRole) {
 		for (let name in Game.spawns) {
 			const spawner = Game.spawns[name];
 			spawner.memory.sleeping = Number(spawner.memory.sleeping) - 1;

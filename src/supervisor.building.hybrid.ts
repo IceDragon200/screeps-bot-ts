@@ -24,7 +24,7 @@ namespace HybridBuildingSupervisor {
 		});
 	}
 
-	function layGroundWorkFor(spawner: Spawn) {
+	function layGroundWorkFor(spawner: StructureSpawn) {
 		console.log("Laying ground work!");
 		spawner.memory.groundWork = 150;
 		const sources = <Source[]>spawner.room.find(FIND_SOURCES);
