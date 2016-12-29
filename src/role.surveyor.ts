@@ -4,6 +4,11 @@ import CartographyRepo from "./repo.cartography";
 import IdleAction from "./action.idle";
 
 namespace SurveyorRole {
+	function resetPosition(creep: Creep) {
+		creep.memory.hasntMoved = 0;
+		return creep;
+	}
+
 	function trackPosition(creep: Creep) {
 		const mem = creep.memory;
 		if (!mem.hasntMoved) mem.hasntMoved = 0;
@@ -13,7 +18,7 @@ namespace SurveyorRole {
 				mem.lastPosition.roomName === creep.pos.roomName) {
 				mem.hasntMoved++;
 			} else {
-				mem.hasntMoved = 0;
+				resetPosition(creep);
 			}
 		}
 		mem.lastPosition = _.clone(creep.pos);
@@ -47,16 +52,19 @@ namespace SurveyorRole {
 		switch (creep.memory.state) {
 			case 'start.return.home':
 				survey.exitRoute = Game.map.findRoute(creep.room, creep.memory.homeRoom);
+				creep.say('rt home');
 				creep.memory.state = 'return.home';
 				break;
 			case 'return.home':
 				if (survey.exitRoute.length > 0) {
-					const route = survey.exitRoute[0];
+					let route = survey.exitRoute[0];
 					if (creep.pos.roomName === route.room) {
 						survey.exitRoute.shift();
+						route = survey.exitRoute[0];
 					}
 					moveToRoute(creep, route);
 				} else {
+					creep.say('home');
 					creep.memory.state = 'request.quest';
 				}
 				break;
@@ -64,6 +72,7 @@ namespace SurveyorRole {
 				cancelQuest(creep);
 				const quest = CartographyRepo.requestQuest(survey.questRoom);
 				if (quest) {
+					resetPosition(creep);
 					CartographyRepo.acceptQuest(quest, creep);
 					const cr = CartographyRepo.getRoomByName(quest.parentRoom);
 					survey.questId = quest.id;
