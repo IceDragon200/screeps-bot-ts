@@ -114,28 +114,16 @@ namespace CartographyRepo {
 	}
 
 	/**
-     * Logs the selected memory into the cartography library
-     *
-     * @param {Object} mem the memory to log
-	 */
-	export function log(mem) {
-		if (mem.survey) {
-			/** @todo */
-		}
-	}
-
-	/**
-	 * Logs a creep's survey information into the cartography memory
+	 * Returns all quests and kills the memory
 	 *
 	 * @param {Creep} creep the creep to log
 	 */
-	export function logCreep(creep: Creep) {
-		if (creep) {
-			log(creep.memory);
-			if (creep.memory.survey) {
-				// The mem can now forget all about his little voyage
-				delete creep.memory.survey;
+	export function cancelCreepMemory(memory) {
+		if (memory && memory.survey) {
+			if (memory.survey.questId) {
+				cancelQuestById(memory.survey.questId);
 			}
+			delete memory.survey;
 		}
 	}
 
@@ -151,14 +139,31 @@ namespace CartographyRepo {
 		};
 	}
 
-	export function addQuest(q: ICartographyQuest) {
+	export function addQuest(quest: ICartographyQuest) {
 		const mem = memory();
-		if (!mem.quests[q.parentRoom]) {
-			mem.quests[q.parentRoom] = [];
+		if (!mem.quests[quest.parentRoom]) {
+			mem.quests[quest.parentRoom] = [];
 		}
-		mem.quests[q.parentRoom].push(q);
-		console.log(`Created new Quest for ${q.parentRoom} to ${q.targetRoom}`);
-		return q;
+		mem.quests[quest.parentRoom].push(quest);
+		console.log(`Added new Quest for '${quest.parentRoom} > ${quest.targetRoom}'`);
+		return quest;
+	}
+
+	export function removeQuestRequestById(room: string, questId: number) {
+		const mem = memory();
+		const result = _.remove(mem.quests[room], (q) => {
+			return q.id === questId;
+		});
+
+		if (mem.quests[room].length === 0) {
+			delete mem.quests[room];
+		}
+		return result;
+	}
+
+	export function removeQuestRequest(quest: ICartographyQuest) {
+		removeQuestRequestById(quest.parentRoom, quest.id);
+		return quest;
 	}
 
 	export function createQuestByRoomName(name: string, room: string): ICartographyQuest {
@@ -212,9 +217,7 @@ namespace CartographyRepo {
 
 	export function moveQuestToActive(quest: ICartographyQuest): ICartographyQuest {
 		const mem = memory();
-		_.remove(mem.quests[quest.parentRoom], (q) => {
-			return q.id === quest.id;
-		});
+		removeQuestRequest(quest);
 		mem.activeQuests.push(quest);
 		console.log(`Quest ${quest.parentRoom} > ${quest.targetRoom} is now active`);
 		return quest;
@@ -242,7 +245,7 @@ namespace CartographyRepo {
 		const mem = memory();
 		const quests = _.remove(mem.activeQuests, {id: questId});
 		quests.forEach((q) => {
-			q.sleep = 120;
+			q.sleep = 30;
 			q.surveyor = null;
 			console.log(`Quest ${q.id} '${q.parentRoom} > ${q.targetRoom}' has been cancelled.`);
 			mem.cancelledQuests.push(q);

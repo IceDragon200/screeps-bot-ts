@@ -99,10 +99,10 @@ namespace CreepRegistrar {
 	 * Logs the creeps by their role to the console for debugging
 	 */
 	export function reportCreepsByRole(creepsByRole: Hive.ICreepsByRole) {
-		Hive.Roles.forEach(function(role) {
+		for (let role in creepsByRole) {
 			const [mn, mx] = Hive.PopulationCap[role];
 			console.log(`Workers available ${role}: ${creepsByRole[role].length} / ${mn} / ${mx}`);
-		});
+		}
 	}
 
 	export function run() {
@@ -115,7 +115,7 @@ namespace CreepRegistrar {
 		if (--reg.timer < 0) {
 			for (let name in Memory['creeps']) {
 				if (!Game.creeps[name]) {
-					CartographyRepo.log(Memory['creeps'][name]);
+					CartographyRepo.cancelCreepMemory(Memory['creeps'][name]);
 					delete Memory['creeps'][name];
 					console.log(`Buried ${name}`);
 				}
