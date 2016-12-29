@@ -55,7 +55,7 @@ namespace FindEnergyState {
 			}
 		}
 
-		if (creep.carry.energy > 0) {
+		if (creep.carry.energy >= creep.carryCapacity) {
 			creep.say('got en');
 			return nextState;
 		}
