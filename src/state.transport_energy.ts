@@ -1,4 +1,6 @@
+import CreepMind from "./creep_mind";
 import Hive from "./hive";
+import IdleAction from "./action.idle";
 
 /**
  * Fills target structures with energy
@@ -40,18 +42,9 @@ namespace TransportEnergyState {
 					creep.moveTo(target);
 					break;
 			}
-			creep.memory.idle = 0;
+			CreepMind.work(creep);
 		} else {
-			if (creep.memory.idle++ > 20) {
-				const flags = _.filter(Game.flags, (f) => {
-					return f.name === "idlers.corner";
-				});
-
-				if (flags.length > 0) {
-					console.log("Moving to idlers corner");
-					creep.moveTo(flags[0]);
-				}
-			}
+			IdleAction.run(creep);
 		}
 
 		if (creep.carry.energy <= 0) {

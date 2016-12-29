@@ -1,3 +1,4 @@
+import CreepMind from "./creep_mind";
 import Hive from "./hive";
 
 namespace FindEnergyState {
@@ -8,7 +9,7 @@ namespace FindEnergyState {
 			if (creep.pickup(target) === ERR_NOT_IN_RANGE) {
 				creep.moveTo(target);
 			}
-			creep.memory.idle = 0;
+			CreepMind.work(creep);
 		} else {
 			const st = <StructureContainer | StructureStorage>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 				filter: (s: Structure) => {
@@ -37,7 +38,7 @@ namespace FindEnergyState {
 						creep.moveTo(st);
 						break;
 				}
-				creep.memory.idle = 0;
+				CreepMind.work(creep);
 			} else {
 				const creepTarget = <Creep>Hive.findBy(creep.pos, FIND_MY_CREEPS, {
 					filter: (c) => {
@@ -45,11 +46,11 @@ namespace FindEnergyState {
 					}
 				});
 				if (creepTarget) {
-					creep.memory.idle = 0;
+					CreepMind.work(creep);
 					//creep.moveTo(creepTarget);
 				} else {
-					creep.memory.sleeping = 3;
-					creep.memory.idle += 1;
+					CreepMind.idle(creep);
+					CreepMind.sleep(creep, 3);
 				}
 			}
 		}

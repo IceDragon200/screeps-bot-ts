@@ -1,39 +1,13 @@
+import CreepMind from "./creep_mind";
 import Hive from "./hive";
+import RepairAction from "./action.repair";
 
 namespace RepairState {
 	export function run(creep: Creep, currentState, nextState) {
-		let damaged = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
-			filter: (s: Structure) => {
-				if (s.structureType === STRUCTURE_WALL) {
-					// ignore walls, they are low priority (unless it's below 5%)
-					//return (s.hits / s.hitsMax) < 0.05;
-					return s.hits < 40000;
-				} else {
-					return (s.hits / s.hitsMax) < 0.95;
-				}
-			}
-		});
-
-		if (!damaged) {
-			// if we didn't find something damaged, try doing a wall instead
-			let damaged = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
-				filter: (s: Structure) => {
-					if (s.structureType === STRUCTURE_WALL) {
-						return (s.hits / s.hitsMax) < 0.95;
-					} else {
-						return false;
-					}
-				}
-			});
-		}
-
-		if (damaged) {
-			if (creep.repair(damaged) === ERR_NOT_IN_RANGE) {
-				creep.moveTo(damaged);
-			}
-			creep.memory.idle = 0;
+		if (RepairAction.run(creep)) {
+			CreepMind.work(creep);
 		} else {
-			creep.memory.idle++;
+			CreepMind.idle(creep);
 		}
 		if (creep.carry.energy <= 0) {
 			creep.say('need en');

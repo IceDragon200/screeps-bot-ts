@@ -1,3 +1,4 @@
+import CreepMind from "./creep_mind";
 import Hive from "./hive";
 
 namespace MineEnergyStep {
@@ -17,11 +18,11 @@ namespace MineEnergyStep {
 					creep.memory.sleeping = 5;
 					break;
 			}
-			creep.memory.idle = 0;
+			CreepMind.work(creep);
 		} else {
 			creep.say("waiting");
-			creep.memory.sleeping = 5;
-			creep.memory.idle++;
+			CreepMind.sleep(creep, 3);
+			CreepMind.idle(creep);
 		}
 		return currentState;
 	}
