@@ -7,12 +7,14 @@ namespace RepairAction {
 		}
 		let damaged = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 			filter: (s: Structure) => {
-				if (s.structureType === STRUCTURE_WALL) {
-					// ignore walls, they are low priority (unless it's below 5%)
-					//return (s.hits / s.hitsMax) < 0.05;
-					return s.hits < 40000;
-				} else {
-					return (s.hits / s.hitsMax) < 0.95;
+				switch (s.structureType) {
+					case STRUCTURE_WALL:
+					case STRUCTURE_RAMPART:
+						// ignore walls, they are low priority (unless it's below 5%)
+						//return (s.hits / s.hitsMax) < 0.05;
+						return s.hits < 40000;
+					default:
+						return (s.hits / s.hitsMax) < 0.95;
 				}
 			}
 		});
@@ -21,10 +23,12 @@ namespace RepairAction {
 			// if we didn't find something damaged, try doing a wall instead
 			let damaged = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 				filter: (s: Structure) => {
-					if (s.structureType === STRUCTURE_WALL) {
-						return (s.hits / s.hitsMax) < 0.95;
-					} else {
-						return false;
+					switch (s.structureType) {
+						case STRUCTURE_WALL:
+						case STRUCTURE_RAMPART:
+							return (s.hits / s.hitsMax) < 0.95;
+						default:
+							return false;
 					}
 				}
 			});
