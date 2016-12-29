@@ -1,4 +1,8 @@
+import * as _ from "lodash";
+import CreepQueue from "./creep_queue";
 import Hive from "./hive";
+import CreepRegistrar from "./registrar.creep";
+import CartographyRepo from "./repo.cartography";
 
 namespace CreepSupervisor {
 	const AutoSpawnRoles = ['miner', 'upgrader', 'builder', 'repairer'];
@@ -30,11 +34,11 @@ namespace CreepSupervisor {
 		return false;
 	}
 
-	function reassignIdlers(list: Creep[], creepsByRole: Hive.ICreepsByRole) {
+	function reassignCreepsRole(list: Creep[], creepsByRole: Hive.ICreepsByRole) {
 		if (!list) return 0;
 
 		list.forEach((c) => {
-			const roles = Hive.prioritizedRoles(Hive.Roles, creepsByRole);
+			const roles = CreepRegistrar.prioritizedRoles(Hive.Roles, creepsByRole);
 			const role = roles[0];
 			c.memory.role = role;
 			creepsByRole[role].push(c);
@@ -42,49 +46,64 @@ namespace CreepSupervisor {
 		return list.length;
 	}
 
+	function runAudit(spawner: StructureSpawn) {
+		if (spawner.room.memory['audit'] === undefined) {
+			spawner.room.memory['audit'] = 0;
+		}
+
+		if (--spawner.room.memory['audit'] <= 0) {
+			console.log("Conducting supervisor audit");
+			spawner.room.memory['audit'] = 120;
+
+			const sources = <Source[]>spawner.room.find(FIND_SOURCES);
+			let count = 0;
+
+			sources.forEach((src) => {
+				count += countOpenSpacesAround(src);
+			});
+
+			let hc = Math.max(Math.floor(count / 2), 1);
+			hc += (hc % 2);
+			spawner.room.memory['popcap'] = {
+				miner: count,
+				//transport: count,
+				upgrader: hc,
+				builder: hc,
+				repairer: hc
+			};
+		}
+
+		if (!CartographyRepo.hasRoom(spawner.room)) {
+			CartographyRepo.visitedRoom(spawner.room);
+		}
+	}
 	export function run() {
-		let creepsByRole = Hive.groupCreepsByRole();
-		if (reassignIdlers(creepsByRole['idler'], creepsByRole) > 0) {
-			creepsByRole = Hive.groupCreepsByRole();
+		let creepsByRole = CreepRegistrar.groupCreepsByRole();
+		if (reassignCreepsRole(creepsByRole['idler'], creepsByRole) > 0) {
+			creepsByRole = CreepRegistrar.groupCreepsByRole();
 		}
 
 		for (let name in Game.spawns) {
 			const spawner = Game.spawns[name];
-			if (spawner.room.memory['audit'] === undefined) {
-				spawner.room.memory['audit'] = 0;
-			}
+			runAudit(spawner);
 
-			if (--spawner.room.memory['audit'] <= 0) {
-				console.log("Conducting supervisor audit");
-				spawner.room.memory['audit'] = 120;
-
-				const sources = <Source[]>spawner.room.find(FIND_SOURCES);
-				let count = 0;
-
-				sources.forEach((src) => {
-					count += countOpenSpacesAround(src);
+			if (CreepQueue.hasQueued(spawner.memory.queue)) {
+				console.log("Completing Queued request");
+				spawner.memory.queue = CreepQueue.complete(spawner.memory.queue, (value) => {
+					console.log(`Attemping to spawn queued ${value}`);
+					return spawnCreepByRole(spawner, value);
 				});
-
-				let hc = Math.max(Math.floor(count / 2), 1);
-				hc += (hc % 2);
-				spawner.room.memory['popcap'] = {
-					miner: count,
-					//transport: count,
-					upgrader: hc,
-					builder: hc,
-					repairer: hc
-				};
-			}
-
-			const popcap = spawner.room.memory['popcap'];
-			if (creepsByRole['transporter'].length < creepsByRole['miner'].length) {
-				spawnCreepByRole(spawner, 'transporter');
 			} else {
-				for (let i in AutoSpawnRoles) {
-					const role = AutoSpawnRoles[i];
-					if (creepsByRole[role].length < popcap[role]) {
-						if (spawnCreepByRole(spawner, role)) {
-							break;
+				const popcap = spawner.room.memory['popcap'];
+				if (creepsByRole['transporter'].length < creepsByRole['miner'].length) {
+					spawnCreepByRole(spawner, 'transporter');
+				} else {
+					for (let i in AutoSpawnRoles) {
+						const role = AutoSpawnRoles[i];
+						if (creepsByRole[role].length < popcap[role]) {
+							if (spawnCreepByRole(spawner, role)) {
+								break;
+							}
 						}
 					}
 				}

@@ -5,60 +5,6 @@ import CreepRegistrar from "./registrar.creep";
  * A slightly overly complex and ineffecient supervisor, but tries it's hardest to balance the spawns
  */
 namespace HybridCreepSupervisor {
-	function neededRole(creepsByRole: Hive.ICreepsByRole, oldRole: string) {
-		const roles = Hive.prioritizedRoles(Hive.Roles, creepsByRole);
-		for (let i in roles) {
-			const role = roles[i];
-			if (role === "idler") continue;
-
-			let [mn, mx] = Hive.PopulationCap[role];
-			if (creepsByRole[role].length < mn) {
-				return role;
-			} else {
-				if (creepsByRole[role].length < mx) {
-					if (oldRole === 'idler' || creepsByRole[oldRole].length > mn) {
-						return role;
-					}
-				}
-			}
-		}
-		return oldRole;
-	}
-
-	/**
-	 * Cleans up any dead creeps,
-	 * Organizes the creeps by their role and then reassigns idling creeps to new
-	 * jobs
-	 */
-	function roleCall() {
-		const creepsByRole = Hive.groupCreepsByRole();
-
-		for (let name in Game.creeps) {
-			const creep = Game.creeps[name];
-
-			let canChange = creep.memory.role === 'idler';
-
-			if (!canChange && Hive.roleChanges) {
-				canChange = creep.memory.idle > Hive.idleLimit;
-			}
-
-			if (canChange) {
-				const oldRole: string = creep.memory.role;
-				creep.memory.role = neededRole(creepsByRole, oldRole);
-
-				if (oldRole !== creep.memory.role) {
-					console.log(`Promoted from '${oldRole}' to '${creep.memory.role}'`);
-					creep.say(creep.memory.role);
-					creepsByRole[oldRole] = _.reject(creepsByRole[oldRole], (c) => {
-						return c.id === creep.id;
-					});
-					creepsByRole[creep.memory.role].push(creep);
-				}
-			}
-		}
-		return creepsByRole;
-	}
-
 	function spawnWorkerOfRole(spawner: StructureSpawn, creepsByRole: Hive.ICreepsByRole, role: string) {
 		const genomes = Hive.GenomesByRole[role];
 		const lv = Math.min(Math.max(0, spawner.room.controller.level - 1), genomes.length - 1);
@@ -97,7 +43,7 @@ namespace HybridCreepSupervisor {
 
 			if (spawner.spawning) continue;
 
-			const roles = Hive.prioritizedRoles(Hive.Roles, creepsByRole);
+			const roles = CreepRegistrar.prioritizedRoles(Hive.Roles, creepsByRole);
 			for (let i in roles) {
 				const role = roles[i];
 				let [mn, _mx] = Hive.PopulationCap[role];
@@ -114,7 +60,7 @@ namespace HybridCreepSupervisor {
 	}
 
 	export function run() {
-		let creepsByRole = roleCall();
+		let creepsByRole = CreepRegistrar.roleCall();
 		creepsByRole = executeSpawners(creepsByRole);
 		if (Hive.debug) {
 			CreepRegistrar.reportCreepsByRole(creepsByRole);
