@@ -1,3 +1,8 @@
+/// <reference path="../typings/globals/screeps/index.d.ts" />
+
+/**
+ * Configuration and Utility module
+ */
 namespace Hive {
 	export type ICreepsByRole = {[role: string]: Creep[]};
 
@@ -65,6 +70,9 @@ namespace Hive {
 		claimer: [
 			[MOVE, CLAIM]
 		],
+		surveyor: [
+			[MOVE, MOVE]
+		],
 		idler: [
 			basicWorker
 		]
@@ -73,40 +81,6 @@ namespace Hive {
 	export function findBy(obj: RoomPosition, ...rest) {
 		return obj.findClosestByPath.apply(obj, rest);
 		//return obj.findClosestByRange.apply(obj, rest);
-	}
-
-	export function updateAllByRole(role, cb) {
-		for (let name in Game.creeps) {
-			const creep: Creep = Game.creeps[name];
-			if (creep) {
-				if (creep.memory.role === role) {
-					cb(creep);
-				}
-			}
-		}
-	}
-
-	export function groupCreepsByRole(): ICreepsByRole {
-		const creepsByRole: ICreepsByRole = {};
-		Hive.Roles.forEach(function(role) {
-			creepsByRole[role] = [];
-		});
-
-		for (let name in Game.creeps) {
-			const creep = Game.creeps[name];
-			const role = creep.memory.role;
-			if (!creepsByRole[role]) {
-				creepsByRole[role] = [];
-			}
-			creepsByRole[role].push(creep);
-		}
-		return creepsByRole;
-	}
-
-	export function prioritizedRoles(roles: string[], creepsByRole: ICreepsByRole): string[] {
-		return _.sortBy(_.clone(roles), (role: string) => {
-			return creepsByRole[role].length;
-		});
 	}
 }
 
