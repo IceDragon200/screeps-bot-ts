@@ -40,18 +40,21 @@ namespace FindEnergyState {
 				}
 				Counters.work(creep);
 			} else {
-				const creepTarget = <Creep>Hive.findBy(creep.pos, FIND_MY_CREEPS, {
-					filter: (c) => {
-						return c.memory.role === 'miner';
-					}
-				});
-				if (creepTarget) {
-					Counters.work(creep);
-					//creep.moveTo(creepTarget);
-				} else {
-					Counters.idle(creep);
-					Counters.sleep(creep, 3);
-				}
+				Counters.idle(creep);
+				Counters.sleep(creep, 3);
+
+				//const creepTarget = <Creep>Hive.findBy(creep.pos, FIND_MY_CREEPS, {
+				//	filter: (c) => {
+				//		return c.memory.role === 'miner';
+				//	}
+				//});
+				//if (creepTarget) {
+				//	Counters.work(creep);
+				//	//creep.moveTo(creepTarget);
+				//} else {
+				//	Counters.idle(creep);
+				//	Counters.sleep(creep, 3);
+				//}
 			}
 		}
 
