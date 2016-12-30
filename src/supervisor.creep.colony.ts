@@ -28,15 +28,26 @@ namespace CreepSupervisor {
 		const genomes = Hive.GenomesByRole[role];
 		const genome = genomes[0];
 		if (genome) {
-			//switch (spawner.canCreateCreep(genome)) {
-			switch (spawner.createCreep(genome, undefined, {role: role})) {
+			switch (spawner.canCreateCreep(genome)) {
 				case ERR_NOT_ENOUGH_ENERGY:
 					Counters.sleep(spawner, 3);
 					//console.log(`Spawner doesn't have enough energy`);
 					break;
 				case OK:
-					console.log(`Created ${role}`);;
-					return true;
+					const code = spawner.createCreep(genome, undefined, {role: role});
+					switch (code) {
+						case ERR_NOT_OWNER:
+						case ERR_NAME_EXISTS:
+						case ERR_BUSY:
+						case ERR_INVALID_ARGS:
+						case ERR_RCL_NOT_ENOUGH:
+							Counters.sleep(spawner, 3);
+							console.log(`Error (${code}) while trying to spawn ${role}`);
+							return false;
+						default:
+							console.log(`Created ${role}`);;
+							return true;
+					}
 			}
 		}
 		return false;
@@ -116,11 +127,12 @@ namespace CreepSupervisor {
 			if (!didSpawn) {
 				const popcap = spawner.room.memory['popcap'];
 				// transporters and miners are MANDATORY
-				if (creepsByRole['transporter'].length < creepsByRole['miner'].length) {
+				if (!CreepRegistrar.hasEnoughOfRole(creepsByRole, 'transporter', CreepRegistrar.countRole(creepsByRole, 'miner'))) {
 					didSpawn = spawnCreepByRole(spawner, 'transporter');
-				} else if (creepsByRole['miner'].length < popcap['miner'].length) {
+				} else if (!CreepRegistrar.hasEnoughOfRole(creepsByRole, 'miner', popcap['miner'])) {
 					didSpawn = spawnCreepByRole(spawner, 'miner');
 				} else {
+					// we can spawn everything else later
 					for (let i in AutoSpawnRoles) {
 						const role = AutoSpawnRoles[i];
 						if (creepsByRole[role].length < popcap[role]) {

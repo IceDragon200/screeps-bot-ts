@@ -105,6 +105,20 @@ namespace CreepRegistrar {
 		}
 	}
 
+	export function countRole(workersByRole: Hive.ICreepsByRole, role: string): number {
+		if (workersByRole[role]) {
+			return workersByRole[role].length;
+		}
+		return 0;
+	}
+
+	export function hasEnoughOfRole(workersByRole: Hive.ICreepsByRole, role: string, count: number): boolean {
+		if (workersByRole[role]) {
+			return workersByRole[role].length >= count;
+		}
+		return false;
+	}
+
 	export function run() {
 		if (Memory['creep_registrar'] === undefined) {
 			Memory['creep_registrar'] = {
