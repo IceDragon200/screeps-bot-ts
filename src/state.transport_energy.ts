@@ -1,4 +1,4 @@
-import CreepMind from "./creep_mind";
+import Counters from "./counters";
 import Hive from "./hive";
 import IdleAction from "./action.idle";
 
@@ -42,7 +42,7 @@ namespace TransportEnergyState {
 					creep.moveTo(target);
 					break;
 			}
-			CreepMind.work(creep);
+			Counters.work(creep);
 		} else {
 			IdleAction.run(creep);
 		}

@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import CreepMind from "./creep_mind";
+import Counters from "./counters";
 import CartographyRepo from "./repo.cartography";
 import IdleAction from "./action.idle";
 
@@ -39,7 +39,7 @@ namespace SurveyorRole {
 				case OK:
 					break;
 				case ERR_BUSY:
-					CreepMind.sleep(creep, 3);
+					Counters.sleep(creep, 3);
 					break;
 				default:
 					console.log(`Unhandled move ${r}`);
@@ -79,12 +79,12 @@ namespace SurveyorRole {
 					survey.targetRoom = quest.targetRoom;
 					survey.exitRoute = Game.map.findRoute(creep.room, survey.targetRoom);
 					creep.say(`qs ${survey.targetRoom}`);
-					CreepMind.work(creep);
+					Counters.work(creep);
 					creep.memory.state = 'do.quest';
 				} else {
 					creep.say("no quest");
 					IdleAction.run(creep);
-					//CreepMind.sleep(creep, 3);
+					//Counters.sleep(creep, 3);
 				}
 				break;
 			case 'do.quest':
@@ -120,7 +120,7 @@ namespace SurveyorRole {
 					} else {
 						moveToRoute(creep, route);
 					}
-					CreepMind.work(creep);
+					Counters.work(creep);
 				} else {
 					creep.memory.state = 'request.quest';
 				}
@@ -135,7 +135,7 @@ namespace SurveyorRole {
 				CartographyRepo.completeQuestById(survey.questId);
 				survey.questId = null;
 				creep.memory.state = 'request.quest';
-				CreepMind.work(creep);
+				Counters.work(creep);
 				break;
 			default:
 				if (!creep.memory.homeRoom) {

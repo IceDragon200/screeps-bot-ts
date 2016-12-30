@@ -1,13 +1,13 @@
-import CreepMind from "./creep_mind";
+import Counters from "./counters";
 import Hive from "./hive";
 import RepairAction from "./action.repair";
 
 namespace RepairState {
 	export function run(creep: Creep, currentState, nextState) {
 		if (RepairAction.run(creep)) {
-			CreepMind.work(creep);
+			Counters.work(creep);
 		} else {
-			CreepMind.idle(creep);
+			Counters.idle(creep);
 		}
 		if (creep.carry.energy <= 0) {
 			creep.say('need en');

@@ -1,4 +1,4 @@
-import CreepMind from "./creep_mind";
+import Counters from "./counters";
 import IdleAction from "./action.idle";
 import RepairAction from "./action.repair";
 
@@ -12,10 +12,10 @@ namespace BuildState {
 			if (creep.build(target) == ERR_NOT_IN_RANGE) {
 				creep.moveTo(target);
 			}
-			CreepMind.work(creep);
+			Counters.work(creep);
 		} else {
 			if (RepairAction.run(creep)) {
-				CreepMind.work(creep);
+				Counters.work(creep);
 			} else {
 				IdleAction.run(creep);
 			}

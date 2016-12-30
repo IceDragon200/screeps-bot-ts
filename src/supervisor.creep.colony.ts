@@ -3,9 +3,10 @@ import CreepQueue from "./creep_queue";
 import Hive from "./hive";
 import CreepRegistrar from "./registrar.creep";
 import CartographyRepo from "./repo.cartography";
+import Counters from "./counters";
 
 namespace CreepSupervisor {
-	const AutoSpawnRoles = ['miner', 'upgrader', 'builder', 'repairer'];
+	const AutoSpawnRoles = ['upgrader', 'builder', 'repairer'];
 
 	function countOpenSpacesAround(obj: RoomObject) {
 		let count = 0;
@@ -26,10 +27,17 @@ namespace CreepSupervisor {
 	function spawnCreepByRole(spawner: Spawn, role) {
 		const genomes = Hive.GenomesByRole[role];
 		const genome = genomes[0];
-		if (spawner.canCreateCreep(genome) === OK) {
-			console.log(`Creating ${role}`);
-			spawner.createCreep(genome, undefined, {role: role});
-			return true;
+		if (genome) {
+			//switch (spawner.canCreateCreep(genome)) {
+			switch (spawner.createCreep(genome, undefined, {role: role})) {
+				case ERR_NOT_ENOUGH_ENERGY:
+					Counters.sleep(spawner, 3);
+					//console.log(`Spawner doesn't have enough energy`);
+					break;
+				case OK:
+					console.log(`Created ${role}`);;
+					return true;
+			}
 		}
 		return false;
 	}
@@ -77,37 +85,59 @@ namespace CreepSupervisor {
 			CartographyRepo.visitedRoom(spawner.room);
 		}
 	}
+
 	export function run() {
 		let creepsByRole = CreepRegistrar.groupCreepsByRole();
 		if (reassignCreepsRole(creepsByRole['idler'], creepsByRole) > 0) {
 			creepsByRole = CreepRegistrar.groupCreepsByRole();
 		}
 
+		let didAnySpawn = false;
+
 		for (let name in Game.spawns) {
 			const spawner = Game.spawns[name];
 			runAudit(spawner);
+			if (!Counters.processSleep(spawner)) {
+				continue;
+			}
+			if (spawner.spawning) {
+				continue;
+			}
 
+			let didSpawn = false;
 			if (CreepQueue.hasQueued(spawner.memory.queue)) {
 				console.log("Completing Queued request");
-				spawner.memory.queue = CreepQueue.complete(spawner.memory.queue, (value) => {
+				[didSpawn, spawner.memory.queue] = CreepQueue.complete(spawner.memory.queue, (value) => {
 					console.log(`Attemping to spawn queued ${value}`);
 					return spawnCreepByRole(spawner, value);
 				});
-			} else {
+			}
+
+			if (!didSpawn) {
 				const popcap = spawner.room.memory['popcap'];
+				// transporters and miners are MANDATORY
 				if (creepsByRole['transporter'].length < creepsByRole['miner'].length) {
-					spawnCreepByRole(spawner, 'transporter');
+					didSpawn = spawnCreepByRole(spawner, 'transporter');
+				} else if (creepsByRole['miner'].length < popcap['miner'].length) {
+					didSpawn = spawnCreepByRole(spawner, 'miner');
 				} else {
 					for (let i in AutoSpawnRoles) {
 						const role = AutoSpawnRoles[i];
 						if (creepsByRole[role].length < popcap[role]) {
 							if (spawnCreepByRole(spawner, role)) {
+								didSpawn = true;
 								break;
 							}
 						}
 					}
 				}
 			}
+
+			if (didSpawn) didAnySpawn = true;
+		}
+
+		if (didAnySpawn) {
+			CreepRegistrar.reportCreepsByRole(creepsByRole);
 		}
 	}
 }

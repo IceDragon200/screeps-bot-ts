@@ -23,15 +23,16 @@ namespace CreepQueue {
 		return target;
 	}
 
-	export function complete(target: string[], cb: (value: string) => boolean) {
+	export function complete(target: string[], cb: (value: string) => boolean): [boolean, queue] {
 		target = patch(target);
 		if (target.length > 0) {
 			const value = target[0];
 			if (cb(value)) {
 				shift(target);
+				return [true, target];
 			}
 		}
-		return target;
+		return [false, target];
 	}
 }
 

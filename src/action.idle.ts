@@ -1,10 +1,10 @@
 import Hive from "./hive";
-import CreepMind from "./creep_mind";
+import Counters from "./counters";
 import * as _ from "lodash";
 
 namespace IdleState {
 	export function run(creep: Creep) {
-		if (CreepMind.idle(creep).memory.idle >= Hive.idleLimit) {
+		if (Counters.idle(creep).memory.idle >= Hive.idleLimit) {
 			const flags = _.filter(Game.flags, (f) => {
 				return f.name === "idlers.corner";
 			});
@@ -16,7 +16,7 @@ namespace IdleState {
 						break;
 					case ERR_TIRED:
 					case ERR_NO_PATH:
-						CreepMind.sleep(creep, 3);
+						Counters.sleep(creep, 3);
 						break;
 				}
 			}

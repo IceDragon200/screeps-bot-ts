@@ -9,6 +9,7 @@ import TransporterRole from './role.transporter';
 import UpgraderRole from './role.upgrader';
 import Supervisor from './supervisor';
 import CartographyRepo from './repo.cartography';
+import Counters from "./counters";
 import Hive from './hive';
 
 const ver = "1.0.0";
@@ -19,15 +20,8 @@ export const loop = function() {
 
 	for (let name in Game.creeps) {
 		const creep = Game.creeps[name];
-		if (creep.memory.idle === undefined) {
-			creep.memory.idle = 0;
-		}
 
-		if (creep.memory.sleeping === undefined) {
-			creep.memory.sleeping = 0;
-		}
-
-		if (creep.memory.sleeping <= 0) {
+		if (Counters.processSleep(creep)) {
 			switch (creep.memory.role) {
 				case 'builder':
 					BuilderRole.run(creep);
@@ -54,14 +48,12 @@ export const loop = function() {
 					SurveyorRole.run(creep);
 					break;
 				default:
-					creep.memory.idle++;
+					Counters.idle(creep);
 					break;
 			}
 			if (Hive.sleepy && creep.memory.idle > 5) {
-				creep.memory.sleeping = 5;
+				Counters.sleep(creep, 3);
 			}
-		} else {
-			creep.memory.sleeping--;
 		}
 
 		if (creep.memory.idle >= Hive.idleLimit) {

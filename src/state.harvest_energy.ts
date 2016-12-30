@@ -1,4 +1,4 @@
-import CreepMind from "./creep_mind";
+import Counters from "./counters";
 import Hive from "./hive";
 
 namespace HarvestEnergyStep {
@@ -11,11 +11,11 @@ namespace HarvestEnergyStep {
 				if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
 					creep.moveTo(source);
 				}
-				CreepMind.work(creep);
+				Counters.work(creep);
 			} else {
 				creep.say("waiting");
-				CreepMind.idle(creep);
-				CreepMind.sleep(creep, 3);
+				Counters.idle(creep);
+				Counters.sleep(creep, 3);
 			}
 			return nextState;
 		} else {
