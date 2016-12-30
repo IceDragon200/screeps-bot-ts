@@ -6,30 +6,7 @@ import IdleAction from "./action.idle";
  * Fills target structures with energy
  */
 namespace TransportEnergyState {
-	export function run(creep: Creep, currentState, nextState) {
-		const target = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
-			filter: (st: Structure) => {
-				switch (st.structureType) {
-					case STRUCTURE_CONTAINER:
-					case STRUCTURE_STORAGE:
-						const con = <StructureContainer | StructureStorage>st;
-						return con.store[RESOURCE_ENERGY] < con.storeCapacity;
-					case STRUCTURE_EXTENSION:
-					case STRUCTURE_SPAWN:
-						if (st instanceof OwnedStructure) {
-							const sp = <StructureSpawn | StructureExtension>st;
-							return sp.energy < sp.energyCapacity;
-						} else {
-							return false;
-						}
-					case STRUCTURE_TOWER:
-						const tow = <StructureTower>st;
-						return tow.energy < tow.energyCapacity;
-					default:
-						return false;
-				}
-			}
-		});
+	function transportToTarget(creep: Creep, target: Structure) {
 		if (target) {
 			switch (creep.transfer(target, RESOURCE_ENERGY)) {
 				case OK:
@@ -42,9 +19,55 @@ namespace TransportEnergyState {
 					creep.moveTo(target);
 					break;
 			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	export function run(creep: Creep, currentState, nextState) {
+		// prioritize extensions and spawns first
+		let target = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
+			filter: (st: Structure) => {
+				switch (st.structureType) {
+					case STRUCTURE_EXTENSION:
+					case STRUCTURE_SPAWN:
+						if (st instanceof OwnedStructure) {
+							const sp = <StructureSpawn | StructureExtension>st;
+							return sp.energy < sp.energyCapacity;
+						} else {
+							return false;
+						}
+					default:
+						return false;
+				}
+			}
+		});
+
+		if (transportToTarget(creep, target)) {
 			Counters.work(creep);
 		} else {
-			IdleAction.run(creep);
+			// now do containers, storage and towers
+			target = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
+				filter: (st: Structure) => {
+					switch (st.structureType) {
+						case STRUCTURE_CONTAINER:
+						case STRUCTURE_STORAGE:
+							const con = <StructureContainer | StructureStorage>st;
+							return con.store[RESOURCE_ENERGY] < con.storeCapacity;
+						case STRUCTURE_TOWER:
+							const tow = <StructureTower>st;
+							return tow.energy < tow.energyCapacity;
+						default:
+							return false;
+					}
+				}
+			});
+
+			if (transportToTarget(creep, target)) {
+				Counters.work(creep);
+			} else {
+				IdleAction.run(creep);
+			}
 		}
 
 		if (creep.carry.energy <= 0) {
