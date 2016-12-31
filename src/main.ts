@@ -32,6 +32,7 @@ export const loop = function() {
 				case 'harvester':
 					HarvesterRole.run(creep);
 					break;
+				case 'transporter_s2':
 				case 'transporter':
 					TransporterRole.run(creep);
 					break;

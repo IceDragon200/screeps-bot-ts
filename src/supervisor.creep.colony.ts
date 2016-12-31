@@ -6,7 +6,7 @@ import CartographyRepo from "./repo.cartography";
 import Counters from "./counters";
 
 namespace CreepSupervisor {
-	const AutoSpawnRoles = ['upgrader', 'builder', 'repairer'];
+	const AutoSpawnRoles = ['upgrader', 'builder', 'repairer', 'transporter_s2'];
 
 	function countOpenSpacesAround(obj: RoomObject) {
 		let count = 0;
@@ -28,13 +28,15 @@ namespace CreepSupervisor {
 		const genomes = Hive.GenomesByRole[role];
 		const genome = genomes[0];
 		if (genome) {
-			switch (spawner.canCreateCreep(genome)) {
+			switch (spawner.canCreateCreep(genome.parts)) {
 				case ERR_NOT_ENOUGH_ENERGY:
 					Counters.sleep(spawner, 3);
 					//console.log(`Spawner doesn't have enough energy`);
 					break;
 				case OK:
-					const code = spawner.createCreep(genome, undefined, {role: role});
+					let initialMemory = _.merge({}, genome.memory || {});
+					initialMemory = _.merge(initialMemory, {role: role});
+					const code = spawner.createCreep(genome.parts, undefined, initialMemory);
 					switch (code) {
 						case ERR_NOT_OWNER:
 						case ERR_NAME_EXISTS:
@@ -85,7 +87,8 @@ namespace CreepSupervisor {
 			hc += (hc % 2);
 			spawner.room.memory['popcap'] = {
 				miner: count,
-				//transport: count,
+				transporter: count,
+				transporter_s2: 4,
 				upgrader: hc,
 				builder: hc,
 				repairer: hc

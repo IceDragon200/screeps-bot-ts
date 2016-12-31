@@ -31,7 +31,7 @@ namespace Hive {
 		idler: [1, 1]
 	};
 	export const AllRoles = Object.keys(PopulationCap);
-	export const Roles = ['miner', 'transporter', 'upgrader', 'builder', 'repairer'];
+	export const Roles = ['miner', 'transporter', 'upgrader', 'builder', 'repairer', 'transporter_s2'];
 
 	export const RoleWeight = {
 		miner: 10,
@@ -43,9 +43,9 @@ namespace Hive {
 		harvester: 0
 	};
 
-	export const basicWorker = [WORK, MOVE, CARRY];
-	export const fastWorker = [WORK, MOVE, MOVE, CARRY];
-	export const superHarvester = [WORK, WORK, MOVE, MOVE, CARRY];
+	export const basicWorker = {parts: [WORK, MOVE, CARRY]};
+	export const fastWorker = {parts: [WORK, MOVE, MOVE, CARRY]};
+	export const superHarvester = {parts: [WORK, WORK, MOVE, MOVE, CARRY]};
 
 	export const GenomesByRole = {
 		harvester: [
@@ -53,10 +53,18 @@ namespace Hive {
 			superHarvester
 		],
 		miner: [
-			[MOVE, WORK, WORK]
+			{parts: [MOVE, WORK, WORK]}
 		],
 		transporter: [
-			[MOVE, MOVE, CARRY]
+			{parts: [MOVE, MOVE, CARRY]}
+		],
+		transporter_s2: [
+			{
+				parts: [MOVE, MOVE, CARRY],
+				memory: {
+					pickupPriority: ['stored_energy', 'dropped_energy']
+				}
+			}
 		],
 		upgrader: [
 			basicWorker
@@ -68,10 +76,10 @@ namespace Hive {
 			fastWorker
 		],
 		claimer: [
-			[MOVE, CLAIM]
+			{parts: [MOVE, CLAIM]}
 		],
 		surveyor: [
-			[MOVE, MOVE]
+			{parts: [MOVE, MOVE]}
 		],
 		idler: [
 			basicWorker

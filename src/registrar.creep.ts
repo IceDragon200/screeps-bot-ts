@@ -100,8 +100,12 @@ namespace CreepRegistrar {
 	 */
 	export function reportCreepsByRole(creepsByRole: Hive.ICreepsByRole) {
 		for (let role in creepsByRole) {
-			const [mn, mx] = Hive.PopulationCap[role];
-			console.log(`Workers available ${role}: ${creepsByRole[role].length} / ${mn} / ${mx}`);
+			if (Hive.PopulationCap[role]) {
+				const [mn, mx] = Hive.PopulationCap[role];
+				console.log(`Workers available ${role}: ${creepsByRole[role].length} / ${mn} / ${mx}`);
+			} else {
+				console.log(`Workers available ${role}: ${creepsByRole[role].length}`);
+			}
 		}
 	}
 
