@@ -48,7 +48,7 @@ namespace Main {
 				switch (creep.memory.behaviour || creep.memory.role) {
 					// Army
 					case 'fighter':
-						FootmanRole.run(creep);
+						FighterRole.run(creep);
 						break;
 					case 'archer':
 						ArcherRole.run(creep);
