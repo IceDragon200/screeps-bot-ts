@@ -130,9 +130,9 @@ namespace CreepSupervisor {
 				upgrader: hc,
 				builder: hc,
 				repairer: hc,
-				archer: 3,
-				fighter: 3,
-				brute: 1
+				archer: 2,
+				fighter: 1,
+				brute: 0
 			};
 
 			if (!CartographyRepo.hasRoom(room)) {
