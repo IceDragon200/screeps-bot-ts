@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import Counters from "./counters";
 import Objects from "./objects";
 import Hive from "./hive";
@@ -8,7 +9,7 @@ namespace FindEnergyState {
 	export const FAVOURED_STORED = [STORED_ENERGY, DROPPED_ENERGY];
 	export const FAVOURED_DROPPED = [DROPPED_ENERGY, STORED_ENERGY];
 
-	function findDroppedEnergy(creep: Creep): boolean {
+	function findDroppedEnergy(creep: Creep): Resource {
 		const target = <Resource>Hive.findBy(creep.pos, FIND_DROPPED_ENERGY);
 
 		if (target) {
@@ -16,13 +17,13 @@ namespace FindEnergyState {
 				creep.moveTo(target);
 			}
 			Counters.work(creep);
-			return true;
+			return target;
 		} else {
-			return false;
+			return null;
 		}
 	}
 
-	function findStoredEnergy(creep: Creep): boolean {
+	function findStoredEnergy(creep: Creep): StructureContainer | StructureStorage {
 		const st = <StructureContainer | StructureStorage>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 			filter: (s: Structure) => {
 				switch (s.structureType) {
@@ -52,9 +53,9 @@ namespace FindEnergyState {
 					break;
 			}
 			Counters.work(creep);
-			return true;
+			return st;
 		} else {
-			return false;
+			return null;
 		}
 	}
 
@@ -67,16 +68,32 @@ namespace FindEnergyState {
 		for (let i in pickupPriority) {
 			const task = pickupPriority[i];
 			switch (task) {
-				case DROPPED_ENERGY:
-					if (findDroppedEnergy(creep)) {
+				case DROPPED_ENERGY: {
+					const dropped = findDroppedEnergy(creep);
+					if (dropped) {
+						creep.memory.withdrewFrom = {
+							type: 'dropped',
+							pos: _.clone(dropped.pos)
+						};
 						foundEnergy = true;
 					}
-					break;
-				case STORED_ENERGY:
-					if (findStoredEnergy(creep)) {
+				}	break;
+				case STORED_ENERGY: {
+					// Prevent withdrawing from previously transfered to
+					if (creep.memory.transferredTo) {
+						if (creep.memory.transferredTo.type === 'storage') {
+							break;
+						}
+					}
+					const storage = findStoredEnergy(creep);
+					if (storage) {
+						creep.memory.withdrewFrom = {
+							type: 'storage',
+							pos: _.clone(storage.pos)
+						};
 						foundEnergy = true;
 					}
-					break;
+				}	break;
 			}
 			if (foundEnergy) {
 				break;

@@ -102,18 +102,19 @@ namespace SurveyorRole {
 
 					if (creep.pos.roomName === survey.targetRoom) {
 						console.log(`Entered room ${creep.room.name}`);
+						const pos = <ExtendedRoomPosition>creep.pos;
 						switch (survey.exitDirection) {
 							case FIND_EXIT_TOP:
-								creep.moveTo(creep.pos.north());
+								creep.moveTo(pos.north());
 								break;
 							case FIND_EXIT_BOTTOM:
-								creep.moveTo(creep.pos.south());
+								creep.moveTo(pos.south());
 								break;
 							case FIND_EXIT_LEFT:
-								creep.moveTo(creep.pos.west());
+								creep.moveTo(pos.west());
 								break;
 							case FIND_EXIT_RIGHT:
-								creep.moveTo(creep.pos.east());
+								creep.moveTo(pos.east());
 								break;
 						}
 						creep.memory.state = 'start.survey';

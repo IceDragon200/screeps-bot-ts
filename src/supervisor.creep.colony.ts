@@ -1,12 +1,22 @@
+import {ExtendedRoomPosition, ExtendedSpawn} from "./__types__";
 import * as _ from "lodash";
-import CreepQueue from "./creep_queue";
+import ActionQueue from "./action_queue";
 import Hive from "./hive";
 import CreepRegistrar from "./registrar.creep";
 import CartographyRepo from "./repo.cartography";
 import Counters from "./counters";
+import Objects from "./objects";
 
 namespace CreepSupervisor {
-	const AutoSpawnRoles = ['upgrader', 'builder', 'repairer', 'transporter_s2'];
+	const AutoSpawnRoles = [
+		{ role: 'upgrader', memory: {} },
+		{ role: 'builder', memory: {} },
+		{ role: 'repairer', memory: {} },
+		{ role: 'transporter_s2', memory: {} },
+		{ role: 'archer', memory: {partol: {name: 'patrol'}} },
+		{ role: 'fighter', memory: {partol: {name: 'patrol'}} },
+		{ role: 'brute', memory: {partol: {name: 'patrol'}} }
+	];
 
 	function countOpenSpacesAround(obj: RoomObject) {
 		let count = 0;
@@ -24,32 +34,48 @@ namespace CreepSupervisor {
 		return count;
 	}
 
-	function spawnCreepByRole(spawner: Spawn, role) {
-		const genomes = Hive.GenomesByRole[role];
-		const genome = genomes[0];
-		if (genome) {
-			switch (spawner.canCreateCreep(genome.parts)) {
-				case ERR_NOT_ENOUGH_ENERGY:
-					Counters.sleep(spawner, 3);
-					//console.log(`Spawner doesn't have enough energy`);
-					break;
-				case OK:
-					let initialMemory = _.merge({}, genome.memory || {});
-					initialMemory = _.merge(initialMemory, {role: role});
-					const code = spawner.createCreep(genome.parts, undefined, initialMemory);
-					switch (code) {
-						case ERR_NOT_OWNER:
-						case ERR_NAME_EXISTS:
-						case ERR_BUSY:
-						case ERR_INVALID_ARGS:
-						case ERR_RCL_NOT_ENOUGH:
-							Counters.sleep(spawner, 3);
-							console.log(`Error (${code}) while trying to spawn ${role}`);
-							return false;
-						default:
-							console.log(`Created ${role}`);;
-							return true;
-					}
+	function spawnCreepByRole(spawner: ExtendedSpawn, role: string, spawnMemory = {}) {
+		const room = spawner.room;
+		const prefabs = Hive.GenomesByRole[role];
+
+		if (!prefabs) {
+			return false;
+		}
+
+		let maxLevel = room.memory['levelcap'][role] || 0;
+		for (; maxLevel >= 0; maxLevel--) {
+			const prefab = prefabs[maxLevel];
+			if (prefab) {
+				switch (spawner.canCreateCreep(prefab.parts)) {
+					case ERR_NOT_ENOUGH_ENERGY:
+						Counters.sleep(spawner, 3);
+						//console.log(`Spawner doesn't have enough energy`);
+						break;
+					case OK:
+						const initialMemory = {
+							...prefab.memory,
+							home: _.clone(spawner.pos),
+							// should the creep be recycled, it should move to a spawner and queue a recycle request
+							recycle: false,
+							role: prefab.role,
+							level: prefab.level,
+							...spawnMemory
+						};
+						const code = spawner.createCreep(prefab.parts, undefined, initialMemory);
+						switch (code) {
+							case ERR_NOT_OWNER:
+							case ERR_NAME_EXISTS:
+							case ERR_BUSY:
+							case ERR_INVALID_ARGS:
+							case ERR_RCL_NOT_ENOUGH:
+								Counters.sleep(spawner, 3);
+								spawner.log(`Error (${code}) while trying to spawn ${role}`);
+								return false;
+							default:
+								spawner.log(`Created ${role}[${maxLevel}]`);;
+								return true;
+						}
+				}
 			}
 		}
 		return false;
@@ -67,16 +93,13 @@ namespace CreepSupervisor {
 		return list.length;
 	}
 
-	function runAudit(spawner: StructureSpawn) {
-		if (spawner.room.memory['audit'] === undefined) {
-			spawner.room.memory['audit'] = 0;
-		}
+	function runAudit(room: Room) {
+		Objects.patch(room.memory, 'audit', () => {return 0;});
 
-		if (--spawner.room.memory['audit'] <= 0) {
+		if (--room.memory['audit'] <= 0) {
 			console.log("Conducting supervisor audit");
-			spawner.room.memory['audit'] = 120;
 
-			const sources = <Source[]>spawner.room.find(FIND_SOURCES);
+			const sources = <Source[]>room.find(FIND_SOURCES);
 			let count = 0;
 
 			sources.forEach((src) => {
@@ -85,18 +108,51 @@ namespace CreepSupervisor {
 
 			let hc = Math.max(Math.floor(count / 2), 1);
 			hc += (hc % 2);
-			spawner.room.memory['popcap'] = {
+
+			room.memory['levelcap'] = {};
+
+			const energyCap = room.energyCapacityAvailable;
+			for (let role in Hive.GenomesByRole) {
+				const prefabs = Hive.GenomesByRole[role];
+				let level = 0;
+				for (; level < prefabs.length; ++level) {
+					if (energyCap < prefabs[level].cost) {
+						break;
+					}
+				}
+				room.memory['levelcap'][role] = Math.min(level, prefabs.length - 1);
+			}
+
+			room.memory['popcap'] = {
 				miner: count,
 				transporter: count,
 				transporter_s2: 4,
 				upgrader: hc,
 				builder: hc,
-				repairer: hc
+				repairer: hc,
+				archer: 3,
+				fighter: 3,
+				brute: 1
 			};
-		}
 
-		if (!CartographyRepo.hasRoom(spawner.room)) {
-			CartographyRepo.visitedRoom(spawner.room);
+			if (!CartographyRepo.hasRoom(room)) {
+				CartographyRepo.visitedRoom(room);
+			}
+
+			console.log(`[${room.name}] Energy Capacity ${energyCap}`);
+			for (let role in room.memory['levelcap']) {
+				const lvl = room.memory['levelcap'][role];
+				const pop = room.memory['popcap'][role];
+
+				const prefab = Hive.GenomesByRole[role][lvl];
+				const cost = prefab ? prefab.cost : '?';
+
+				if (pop) {
+					console.log(`[${room.name}] Available ${role}[${lvl}] / ${pop} @ ${cost} EN`);
+				}
+			}
+
+			room.memory['audit'] = 120;
 		}
 	}
 
@@ -108,22 +164,48 @@ namespace CreepSupervisor {
 
 		let didAnySpawn = false;
 
+		for (let roomName in Memory.rooms) {
+			runAudit(Game.rooms[roomName]);
+		}
+
 		for (let name in Game.spawns) {
-			const spawner = Game.spawns[name];
-			runAudit(spawner);
+			const spawner = <ExtendedSpawn>Game.spawns[name];
+
 			if (!Counters.processSleep(spawner)) {
 				continue;
 			}
+
 			if (spawner.spawning) {
 				continue;
 			}
 
+			if (--spawner.memory['recycleTimer'] <= 0) {
+				const creeps = <Creep[]>spawner.pos.findInRange(FIND_MY_CREEPS, 1, {
+					filter: (c: Creep) => {
+						return c.memory.recycle;
+					}
+				});
+				if (creeps.length > 0) {
+					const creep = creeps[0];
+					switch (spawner.recycleCreep(creep)) {
+						case OK:
+							spawner.log(`Recycling creep ${creep.name}`);
+							break
+						case ERR_NOT_IN_RANGE:
+							spawner.log(`Creep is too far! ${creep.name}`);
+							break;
+						default:
+					}
+				}
+				spawner.memory['recycleTimer'] = 15;
+			}
+
 			let didSpawn = false;
-			if (CreepQueue.hasQueued(spawner.memory.queue)) {
-				console.log("Completing Queued request");
-				[didSpawn, spawner.memory.queue] = CreepQueue.complete(spawner.memory.queue, (value) => {
-					console.log(`Attemping to spawn queued ${value}`);
-					return spawnCreepByRole(spawner, value);
+			if (ActionQueue.hasQueued(spawner.memory.queue)) {
+				spawner.log("Completing Queued request");
+				[didSpawn, spawner.memory.unitQueue] = ActionQueue.complete(spawner.memory.unitQueue, (value) => {
+					spawner.log(`Attemping to spawn queued ${value}`);
+					return spawnCreepByRole(spawner, value.params[0]);
 				});
 			}
 
@@ -137,9 +219,10 @@ namespace CreepSupervisor {
 				} else {
 					// we can spawn everything else later
 					for (let i in AutoSpawnRoles) {
-						const role = AutoSpawnRoles[i];
-						if (creepsByRole[role].length < popcap[role]) {
-							if (spawnCreepByRole(spawner, role)) {
+						const preset = AutoSpawnRoles[i];
+						const roleCap = popcap[preset.role] || 0;
+						if (CreepRegistrar.countRole(creepsByRole, preset.role) < roleCap) {
+							if (spawnCreepByRole(spawner, preset.role, preset.memory)) {
 								didSpawn = true;
 								break;
 							}

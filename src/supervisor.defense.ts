@@ -66,7 +66,11 @@ namespace DefenseSupervisor {
 			const room = Game.rooms[name];
 			const towers = <StructureTower[]>room.find(FIND_MY_STRUCTURES, {
 				filter: (s: Structure) => {
-					return s.structureType === STRUCTURE_TOWER;
+					if (s instanceof StructureTower) {
+						return s.energy > 0;
+					} else {
+						return false;
+					}
 				}
 			});
 			commandTowers(towers);

@@ -99,6 +99,7 @@ namespace CreepRegistrar {
 	 * Logs the creeps by their role to the console for debugging
 	 */
 	export function reportCreepsByRole(creepsByRole: Hive.ICreepsByRole) {
+		let popCap = 0;
 		for (let role in creepsByRole) {
 			if (Hive.PopulationCap[role]) {
 				const [mn, mx] = Hive.PopulationCap[role];
@@ -106,7 +107,9 @@ namespace CreepRegistrar {
 			} else {
 				console.log(`Workers available ${role}: ${creepsByRole[role].length}`);
 			}
+			popCap += creepsByRole[role].length;
 		}
+		console.log(`Population ${popCap}`);
 	}
 
 	export function countRole(workersByRole: Hive.ICreepsByRole, role: string): number {

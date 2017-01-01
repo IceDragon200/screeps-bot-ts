@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import Counters from "./counters";
 import Hive from "./hive";
 import IdleAction from "./action.idle";
@@ -24,7 +25,8 @@ namespace TransportEnergyState {
 			return false;
 		}
 	}
-	export function run(creep: Creep, currentState, nextState) {
+
+	export function run(creep: Creep, currentState: string, nextState: string) {
 		// prioritize extensions and spawns first
 		let target = <Structure>Hive.findBy(creep.pos, FIND_STRUCTURES, {
 			filter: (st: Structure) => {
@@ -44,6 +46,10 @@ namespace TransportEnergyState {
 		});
 
 		if (transportToTarget(creep, target)) {
+			creep.memory.transferredTo = {
+				type: 'spawn',
+				pos: _.clone(target.pos)
+			};
 			Counters.work(creep);
 		} else {
 			// now do containers, storage and towers
@@ -53,6 +59,13 @@ namespace TransportEnergyState {
 						case STRUCTURE_CONTAINER:
 						case STRUCTURE_STORAGE:
 							const con = <StructureContainer | StructureStorage>st;
+							// Prevent creeps from depositing energy withdrawn
+							// from a storage back into storage
+							if (creep.memory.withdrewFrom) {
+								if (creep.memory.withdrewFrom.type === 'storage') {
+									return false;
+								}
+							}
 							return con.store[RESOURCE_ENERGY] < con.storeCapacity;
 						case STRUCTURE_TOWER:
 							const tow = <StructureTower>st;
@@ -64,6 +77,12 @@ namespace TransportEnergyState {
 			});
 
 			if (transportToTarget(creep, target)) {
+				creep.memory.transferredTo = {
+					type: (target.structureType === STRUCTURE_CONTAINER ?
+						'storage' :
+						(target.structureType === STRUCTURE_STORAGE ? 'storage' : 'tower')),
+					pos: _.clone(target.pos)
+				};
 				Counters.work(creep);
 			} else {
 				IdleAction.run(creep);

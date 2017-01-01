@@ -6,16 +6,24 @@ namespace MineEnergyStep {
 		const source = <Source>Hive.findBy(creep.pos, FIND_SOURCES, {
 			ignoreCreeps: false
 		});
+
 		if (source) {
 			switch (creep.harvest(source)) {
+				case OK:
+					break;
+				case ERR_NOT_ENOUGH_RESOURCES:
+					if (creep.pos.getRangeTo(source.pos.x, source.pos.y) < 2) {
+						creep.say('gt sleep');
+						Counters.sleep(creep, source.ticksToRegeneration / 2);
+						break;
+					} else {
+						creep.moveTo(source);
+					}
 				case ERR_NOT_IN_RANGE:
 					creep.moveTo(source);
 					break;
 				case ERR_NO_BODYPART:
 					creep.memory.role = 'idler';
-					break;
-				case ERR_NOT_ENOUGH_RESOURCES:
-					creep.memory.sleeping = 5;
 					break;
 			}
 			Counters.work(creep);
