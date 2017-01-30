@@ -12,11 +12,12 @@ import CreepRegistrar from "./registrar.creep";
  * The Supervisor will execute all sub registrars and supervisors
  */
 namespace Supervisor {
-	export function run() {
-		CreepRegistrar.run();
-		CreepSupervisor.run();
-		BuildingSupervisor.run();
-		DefenseSupervisor.run();
+	export function run(env) {
+		env = CreepRegistrar.run(env);
+		env = CreepSupervisor.run(env);
+		env = BuildingSupervisor.run(env);
+		env = DefenseSupervisor.run(env);
+		return env;
 	}
 };
 

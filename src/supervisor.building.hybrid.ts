@@ -1,3 +1,7 @@
+import Objects from "./objects";
+import {IHasMemory} from "./__types__";
+import Hive from "./hive";
+
 namespace HybridBuildingSupervisor {
 	function sorroundWithRoads(objs: RoomObject[]) {
 		objs.forEach((obj) => {
@@ -17,36 +21,40 @@ namespace HybridBuildingSupervisor {
 					ignoreRoads: false,
 					ignoreDestructibleStructures: true
 				});
-				path.forEach((p) => {
+				path.forEach(function(p) {
 					obj.room.createConstructionSite(p.x, p.y, STRUCTURE_ROAD);
 				});
 			});
 		});
 	}
 
-	function layGroundWorkFor(spawner: StructureSpawn) {
+	function layGroundWorkFor(base: StructureSpawn | Flag) {
 		console.log("Laying ground work!");
-		spawner.memory.groundWork = 150;
-		const sources = <Source[]>spawner.room.find(FIND_SOURCES);
-		const minerals = <Mineral[]>spawner.room.find(FIND_MINERALS);
-		layRoadsFromTo([spawner], sources);
-		layRoadsFromTo([spawner], [spawner.room.controller]);
-		layRoadsFromTo(sources, [spawner.room.controller]);
-		layRoadsFromTo([spawner], minerals);
-		sorroundWithRoads([spawner, spawner.room.controller]);
+		base.memory.groundWork = 2;
+		const sources = <Source[]>base.room.find(FIND_SOURCES);
+		const minerals = <Mineral[]>base.room.find(FIND_MINERALS);
+		layRoadsFromTo([base], sources);
+		layRoadsFromTo([base], [base.room.controller]);
+		layRoadsFromTo(sources, [base.room.controller]);
+		layRoadsFromTo([base], minerals);
+		sorroundWithRoads([base, base.room.controller]);
 		sorroundWithRoads(sources);
 		sorroundWithRoads(minerals);
 	}
 
-	export function run() {
-		Memory['buildingTimer'] = Number(Memory['buildingTimer']) - 1;
+	export function run(env) {
+		Objects.patch(Memory, 'buildingTimer', function() {return 0;});
+
 		if (Memory['buildingTimer'] <= 0) {
-			for (let name in Game.spawns) {
-				const spawner = Game.spawns[name];
-				layGroundWorkFor(spawner);
-			}
-			Memory['buildingTimer'] = 120;
+			Hive.eachSpawnPoint(function(sp) {
+				Objects.patch(sp.memory, 'groundWork', function() {return 0;});
+				if (--sp.memory['groundWork'] <= 0) {
+					layGroundWorkFor(sp.host);
+				}
+			});
+			Memory['buildingTimer'] = 60;
 		}
+		return env;
 	}
 }
 

@@ -1,19 +1,21 @@
-import {IWaypointsSystem, WaypointsMap, Waypoints, ExtendedRoom} from "./__types__";
+import {ExtendedSpawn, IWaypointsSystem, WaypointsMap, Waypoints, ExtendedRoom, FindStructureAndWeightOptions} from "./__types__";
 import * as _ from "lodash";
 import Objects from "./objects";
 import ActionQueue, {Action} from "./action_queue";
 
-Object.defineProperty(StructureTower, 'memory', {
+/*Object.defineProperty(StructureTower, 'memory', {
 	get: function() { return Memory['towers'][this.id]; },
-	set: function(v) { return Memory['towers'][this.id] = v;}
-});
+	set: function(v) { Memory['towers'][this.id] = v;}
+});*/
 
-_.extend(StructureSpawn.prototype, {
-	log(text: string) {
+const Loggable = {
+	log(text: string): ExtendedSpawn {
 		console.log(`[${this.name}] ${text}`);
 		return this;
-	},
+	}
+};
 
+const ActionSystem = {
 	nextAction(name: string, ...params: any[]): Action {
 		Objects.patch(this.memory, 'actionCounter', () => {
 			return 0;
@@ -26,7 +28,22 @@ _.extend(StructureSpawn.prototype, {
 		};
 	},
 
-	unqueueUnit(role: string, count: number = -1) {
+	createAction(name: string, ...params: any[]): Action {
+		const action: Action = this.nextAction(name, ...params);
+		this.memory.actions = ActionQueue.append(this.memory.actions, action);
+		return action;
+	}
+};
+
+const UnitSystem = {
+	clearUnitQueue(): ExtendedSpawn {
+		if (this.memory.unitQueue) {
+			this.memory.unitQueue = [];
+		}
+		return this;
+	},
+
+	unqueueUnit(role: string, count: number = -1): ExtendedSpawn {
 		if (this.memory.unitQueue) {
 			let removed = 0;
 			if (count < 0) {
@@ -52,15 +69,29 @@ _.extend(StructureSpawn.prototype, {
 		return this;
 	},
 
-	enqueueUnit(role: string, count: number = 1) {
+	/**
+	 * Queues a creep to be spawned, or multiple creeps.
+	 *
+	 * @param {string} role
+	 * @param {number} count
+	 * @param {object} options
+	 * @options options
+	 * @option options {number} level
+	 * @option options {object} memory
+	 */
+	enqueueUnit(role: string, count: number = 1, options = {}): ExtendedSpawn {
 		for (let i = 0; i < count; ++i) {
-			const action = this.nextAction('spawn', role);
+			const action = this.nextAction('spawn', role, options);
 			this.memory.unitQueue = ActionQueue.append(this.memory.unitQueue, action);
 		}
 		console.log(`${this.name} queued ${count} ${role}`);
 		return this;
 	}
-});
+};
+
+_.extend(Creep.prototype, Loggable, ActionSystem);
+_.extend(StructureSpawn.prototype, Loggable, ActionSystem, UnitSystem);
+_.extend(Flag.prototype, Loggable, ActionSystem, UnitSystem);
 
 _.extend(RoomPosition.prototype, {
 	offset(x: number, y: number): RoomPosition {
@@ -167,7 +198,9 @@ const WaypointsSystem: IWaypointsSystem = {
 	destroyWaypoint(name: string, index: number): Room {
 		const waypointName = makeWaypointName(name, index);
 		const flag: Flag = this.getWaypoint(name, index);
-		flag.remove();
+		if (flag) {
+			flag.remove();
+		}
 		delete Memory.flags[waypointName];
 		console.log(`Removed Waypoint ${waypointName}`);
 		return this;
@@ -194,4 +227,19 @@ const WaypointsSystem: IWaypointsSystem = {
 	}
 };
 
-_.extend(Room.prototype, WaypointsSystem);
+const ExtendedFind = {
+	findStructuresAndWeigh(weights: {[structureType: number]: number}, options: FindStructureAndWeightOptions): Structure[] {
+		const room = <ExtendedRoom>this;
+		const structures = <Structure[]>room.find(FIND_STRUCTURES, {
+			filter: function(st: Structure) {
+				return !!weights[st.structureType] && options.filter(st);
+			}
+		});
+
+		return _.sortBy(structures, function(st) {
+			return [weights[st.structureType], options.sortBy(st)];
+		});
+	}
+};
+
+_.extend(Room.prototype, ExtendedFind, WaypointsSystem);

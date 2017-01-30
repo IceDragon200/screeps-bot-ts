@@ -2,6 +2,13 @@ import {ExtendedRoom} from "./__types__";
 
 namespace PatrolAction {
 	export function setNextPatrol(creep: Creep, flag: Flag) {
+		// patrol correction
+		if ((typeof creep.memory.patrol) === 'string') {
+			creep.memory.patrol = {
+				name: creep.memory.patrol
+			};
+		}
+
 		if (flag) {
 			creep.memory.patrol.next = flag.name;
 			return true;
@@ -12,8 +19,8 @@ namespace PatrolAction {
 	}
 
 	export function run(creep: Creep) {
-		if (creep.memory.patrol) {
-			const patrol = creep.memory.patrol;
+		const patrol = creep.memory.patrol;
+		if (patrol) {
 			if (patrol.next) {
 				const flag = Game.flags[patrol.next];
 				if (flag) {
@@ -41,8 +48,9 @@ namespace PatrolAction {
 				return setNextPatrol(creep, flag);
 			}
 		} else {
-			return false;
+			console.log('no patrol!');
 		}
+		return false;
 	}
 }
 

@@ -1,6 +1,6 @@
+import * as _ from "lodash";
 import Hive from "./hive";
 import Counters from "./counters";
-import * as _ from "lodash";
 
 namespace IdleState {
 	export function run(creep: Creep) {

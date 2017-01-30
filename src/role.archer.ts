@@ -7,7 +7,7 @@ namespace ArcherRole {
 	/**
 	 * @param {Creep} creep
 	 */
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
 		switch (creep.memory.state) {
 			case 'disband':
 				DisbandAction.run(creep);
@@ -23,6 +23,7 @@ namespace ArcherRole {
 					}
 				} else {
 					if (RegenAction.run(creep)) {
+						console.log('Regenerated');
 						Counters.work(creep);
 					} else {
 						if (PatrolAction.run(creep)) {

@@ -1,3 +1,4 @@
+import CreepRegistrar from "./registrar.creep";
 import HarvestEnergyState from "./state.harvest_energy";
 import TransportEnergyState from "./state.transport_energy";
 
@@ -6,7 +7,14 @@ import TransportEnergyState from "./state.transport_energy";
  */
 namespace HarvesterRole {
 	/** @param {Creep} creep **/
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
+		if (creep.memory.wasMiner) {
+			if (CreepRegistrar.countRole(env.creepsByRole, 'transporter') > 0) {
+				delete creep.memory.wasMiner;
+				creep.memory.role = 'miner';
+				return;
+			}
+		}
 		switch (creep.memory.state) {
 			case 'enter.transport.energy':
 				creep.say('transport');

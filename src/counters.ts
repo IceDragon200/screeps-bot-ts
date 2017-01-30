@@ -1,9 +1,7 @@
 /**
  * Utility functions for handling roomObject sleeping and idling
  */
-interface IHasMemory {
-	memory: any;
-}
+import {IHasMemory} from "./__types__";
 
 /**
  * Various counters on RoomObjects
@@ -45,6 +43,10 @@ namespace Counters {
 		}
 		obj.memory.sleeping += Math.max(duration, 0);
 		return obj;
+	}
+
+	export function isSleeping<T extends IHasMemory>(obj: T) {
+		return obj.memory.sleeping && obj.memory.sleeping > 0;
 	}
 
 	/**

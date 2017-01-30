@@ -2,6 +2,10 @@
 
 import {Action} from "./action_queue";
 
+export interface IHasMemory {
+	memory: any;
+}
+
 export interface Waypoints {
 	color1: number;
 	color2: number;
@@ -13,12 +17,23 @@ export interface WaypointsMap {
 	[name: string]: Waypoints;
 }
 
-export interface ExtendedSpawn extends Spawn {
+export interface ILoggable {
 	log(text: string): ExtendedSpawn;
+}
+
+export interface IActionSystem {
 	nextAction(name: string, ...params: any[]): Action;
+}
+
+export interface IUnitSystem {
+	clearUnitQueue(): ExtendedSpawn;
 	unqueueUnit(role: string, count: number): ExtendedSpawn;
 	enqueueUnit(role: string, count: number): ExtendedSpawn;
 }
+
+export interface ExtendedFlag extends Flag, ILoggable, IActionSystem, IUnitSystem {}
+export interface ExtendedSpawn extends Spawn, ILoggable, IActionSystem, IUnitSystem {}
+export interface ExtendedCreep extends Creep, ILoggable, IActionSystem {}
 
 export interface IWaypointsSystem {
 	getWaypointsMap(): WaypointsMap;
@@ -33,7 +48,13 @@ export interface IWaypointsSystem {
 	destroyAllWaypoints(): Room;
 }
 
+export interface FindStructureAndWeightOptions {
+	filter: (st: Structure) => boolean;
+	sortBy: (st: Structure) => any;
+}
+
 export interface ExtendedRoom extends Room, IWaypointsSystem {
+	findStructuresAndWeigh(weights: {[structureType: number]: number}, options: FindStructureAndWeightOptions): Structure[];
 }
 
 export interface ExtendedRoomPosition extends RoomPosition {

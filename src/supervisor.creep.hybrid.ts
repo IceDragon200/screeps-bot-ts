@@ -59,12 +59,13 @@ namespace HybridCreepSupervisor {
 		return creepsByRole;
 	}
 
-	export function run() {
+	export function run(env) {
 		let creepsByRole = CreepRegistrar.roleCall();
 		creepsByRole = executeSpawners(creepsByRole);
 		if (Hive.debug) {
 			CreepRegistrar.reportCreepsByRole(creepsByRole);
 		}
+		return env;
 	}
 }
 

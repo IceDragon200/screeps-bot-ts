@@ -5,7 +5,7 @@ namespace RepairerRole {
 	/**
 	 * @param {Creep} creep
 	 */
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
 		switch (creep.memory.state) {
 			case 'enter.repair':
 				creep.say('repairing');

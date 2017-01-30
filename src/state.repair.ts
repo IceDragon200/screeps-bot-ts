@@ -8,6 +8,9 @@ namespace RepairState {
 			Counters.work(creep);
 		} else {
 			Counters.idle(creep);
+			if (creep.memory.idle > 20) {
+				Counters.sleep(creep, 5);
+			}
 		}
 		if (creep.carry.energy <= 0) {
 			creep.say('need en');

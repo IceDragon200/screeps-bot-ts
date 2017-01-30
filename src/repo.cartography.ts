@@ -383,7 +383,7 @@ namespace CartographyRepo {
 		return cr;
 	}
 
-	export function run() {
+	export function run(state) {
 		const mem = memory();
 		const c = mem.cancelledQuests;
 		if (c.length > 0) {

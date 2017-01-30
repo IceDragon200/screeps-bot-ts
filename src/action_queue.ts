@@ -5,6 +5,11 @@ export interface Action {
 }
 
 namespace ActionQueue {
+	export enum ActionResult {
+		REJECT,
+		WORKING,
+		OK
+	}
 
 	function patch(target: Action[]) {
 		return target || [];
@@ -30,16 +35,20 @@ namespace ActionQueue {
 		return target;
 	}
 
-	export function complete(target: Action[], cb: (value: Action) => boolean): [boolean, Action[]] {
+	export function complete(target: Action[], cb: (value: Action) => ActionResult): [ActionResult, Action[]] {
 		target = patch(target);
 		if (target.length > 0) {
 			const value = target[0];
-			if (cb(value)) {
-				shift(target);
-				return [true, target];
+			const result = cb(value);
+			switch (result) {
+				case ActionResult.OK:
+				case ActionResult.REJECT:
+					shift(target);
+					break;
 			}
+			return [result, target];
 		}
-		return [false, target];
+		return [ActionResult.REJECT, target];
 	}
 }
 

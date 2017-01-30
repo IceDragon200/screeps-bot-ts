@@ -5,12 +5,10 @@ namespace RegenAction {
 		if (_.includes(<any[]>creep.body, (part) => { return part.type === HEAL; })) {
 			if (creep.hits < creep.hitsMax) {
 				creep.heal(creep);
-			} else {
-				return false;
+				return true;
 			}
-		} else {
-			return false;
 		}
+		return false;
 	}
 }
 

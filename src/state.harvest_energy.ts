@@ -8,6 +8,9 @@ namespace HarvestEnergyStep {
 				ignoreCreeps: false
 			});
 			if (source) {
+				if (creep.pos.getRangeTo(source) > 1) {
+					creep.moveTo(source);
+				}
 				switch (creep.harvest(source) ) {
 					case OK:
 						break;

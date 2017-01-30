@@ -1,6 +1,7 @@
 /// <reference path="../typings/globals/screeps/index.d.ts" />
 
 import * as _ from "lodash";
+import {ExtendedSpawn, ExtendedFlag} from "./__types__";
 
 /**
  * Configuration and Utility module
@@ -200,14 +201,16 @@ namespace Hive {
 				parts: [MOVE, CARRY, MOVE],
 				memory: {
 					pickupPriority: ['stored_energy', 'dropped_energy'],
-					behaviour: 'transporter'
+					behaviour: 'transporter',
+					solo: true
 				}
 			}),
 			new RolePrefab({
 				parts: [MOVE, CARRY, MOVE, CARRY, CARRY, MOVE],
 				memory: {
 					pickupPriority: ['stored_energy', 'dropped_energy'],
-					behaviour: 'transporter'
+					behaviour: 'transporter',
+					solo: true
 				}
 			})
 		],
@@ -215,6 +218,12 @@ namespace Hive {
 			basicWorker.copy(),
 			new RolePrefab({
 				parts: [MOVE, WORK, CARRY, MOVE, WORK, CARRY, MOVE, MOVE],
+				memory: {
+					pickupPriority: ['stored_energy', 'dropped_energy']
+				}
+			}),
+			new RolePrefab({
+				parts: [MOVE, WORK, MOVE, CARRY, MOVE, WORK, MOVE, CARRY, MOVE, WORK, CARRY, MOVE, WORK, CARRY, MOVE, MOVE],
 				memory: {
 					pickupPriority: ['stored_energy', 'dropped_energy']
 				}
@@ -401,6 +410,77 @@ namespace Hive {
 		roles.forEach((role) => {
 			displayRoleInformation(role);
 		});
+	}
+
+	export function eachAnchor(cb: (flag: Flag) => void) {
+		for (let name in Game.flags) {
+			const flag = Game.flags[name];
+			if (flag && flag.memory.isAnchor) {
+				cb(flag);
+			}
+		}
+	}
+
+	export interface RemotePoint {
+		flag: string;
+		room: string;
+	}
+
+	export interface ISpawnPoint {
+		// is this an actual spawner?
+		isSpawn: boolean;
+		host: ExtendedSpawn | ExtendedFlag;
+		spawner: ExtendedSpawn;
+		memory: {
+			remote?: RemotePoint
+		}
+	}
+
+	export function eachSpawnPoint(cb: (point: ISpawnPoint) => void) {
+		for (let name in Game.spawns) {
+			const spawner = <ExtendedSpawn>Game.spawns[name];
+			if (spawner) {
+				cb({
+					isSpawn: true,
+					host: spawner,
+					spawner: spawner,
+					memory: {}
+				});
+			}
+		}
+
+		Hive.eachAnchor(function(flag: Flag) {
+			if (!flag.memory.spawnName) {
+				return;
+			}
+
+			const spawner = <ExtendedSpawn>Game.spawns[flag.memory.spawnName];
+			if (!spawner) {
+				flag.memory.spawnName = null;
+				return;
+			}
+
+			cb({
+				isSpawn: false,
+				host: <ExtendedFlag>flag,
+				spawner: spawner,
+				memory: {
+					remote: {
+						flag: flag.name,
+						room: flag.room.name
+					}
+				}
+			});
+		});
+	}
+
+	export function locateRole(role: string) {
+		for (let name in Game.creeps) {
+			const creep = Game.creeps[name];
+			if (creep.memory.role === role) {
+				console.log(`Located ${creep.name} at (${creep.pos.x}, ${creep.pos.y}) in ${creep.pos.roomName}`);
+			}
+		}
 	}
 }
 

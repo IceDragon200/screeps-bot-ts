@@ -8,14 +8,17 @@ import CartographyRepo from "./repo.cartography";
  */
 namespace CreepRegistrar {
 	export function updateAllByRole(role: string, cb: (creep: Creep) => void) {
+		let count = 0;
 		for (let name in Game.creeps) {
 			const creep: Creep = Game.creeps[name];
 			if (creep) {
 				if (creep.memory.role === role) {
 					cb(creep);
+					count += 1;
 				}
 			}
 		}
+		return count;
 	}
 
 	export function groupCreepsByRole(): Hive.ICreepsByRole {
@@ -110,23 +113,123 @@ namespace CreepRegistrar {
 			popCap += creepsByRole[role].length;
 		}
 		console.log(`Population ${popCap}`);
+		return popCap;
 	}
 
-	export function countRole(workersByRole: Hive.ICreepsByRole, role: string): number {
-		if (workersByRole[role]) {
-			return workersByRole[role].length;
+	export function countRole(creepsByRole: Hive.ICreepsByRole, role: string): number {
+		if (creepsByRole[role]) {
+			return creepsByRole[role].length;
 		}
 		return 0;
 	}
 
-	export function hasEnoughOfRole(workersByRole: Hive.ICreepsByRole, role: string, count: number): boolean {
-		if (workersByRole[role]) {
-			return workersByRole[role].length >= count;
+	export function countRoleInRoom(creepsByRole: Hive.ICreepsByRole, role: string, room: Room): number {
+		return _.filter(creepsByRole[role], function(c) {
+			if (c.memory.remote) {
+				return c.memory.remote.room === room.name;
+			} else {
+				return c.room.name === room.name;
+			}
+		}).length;
+	}
+
+	export function hasEnoughOfRole(creepsByRole: Hive.ICreepsByRole, role: string, count: number): boolean {
+		return countRole(creepsByRole, role) >= count;
+	}
+
+	export function hasEnoughOfRoleInRoom(creepsByRole: Hive.ICreepsByRole, role: string, count: number, room: Room): boolean {
+		return countRoleInRoom(creepsByRole, role, room) >= count;
+	}
+
+	export function partnerWithCreep(a: Creep, b: Creep) {
+		a.memory.partner = b.name;
+		b.memory.partner = a.name;
+		console.log(`${a.name} is now buddies with ${b.name}`);
+		return true;
+	}
+
+	export function canPartner(creep: Creep) {
+		return !creep.memory.solo;
+	}
+
+	export function creepInSameRemote(creep: Creep, other: Creep) {
+		if (!creep.memory.remote && !other.memory.remote) {
+			// neither has a remote, so they can partner
+			return true;
 		}
+
+		if (creep.memory.remote && other.memory.remote) {
+			return creep.memory.remote.room === other.memory.remote.room;
+		}
+
 		return false;
 	}
 
-	export function run() {
+	export function partnerWithRole(creepsByRole: Hive.ICreepsByRole, creep: Creep, role: string) {
+		const creeps = creepsByRole[role];
+		if (creeps) {
+			const found = _.find(creeps, (other) => {
+				return !other.memory.partner && canPartner(other) && creepInSameRemote(creep, other);
+			});
+
+			if (found) {
+				partnerWithCreep(creep, found);
+			}
+		}
+		return true;
+	}
+
+	function clearPartner(creep: Creep, reason) {
+		console.log(`Clearing ${creep.name}'s partner, because ${reason}`);
+		creep.memory.partner = null;
+	}
+
+	export function tryPartnerWithRole(creepsByRole: Hive.ICreepsByRole, creep: Creep, role: string) {
+		if (!canPartner(creep)) {
+			if (creep.memory.partner) {
+				clearPartner(creep, "it cannot partner");
+			}
+			return false;
+		}
+
+		if (creep.memory.partner) {
+			const other = Game.creeps[creep.memory.partner];
+			// check if the creep exists
+			if (other && canPartner(other)) {
+				if (other.memory.partner) {
+					// If the other creep has a partner, detect if it's the same as the current creep
+					// or if the specified creep doesn't match the expected role
+					if (other.memory.partner !== creep.name) {
+						clearPartner(creep, "the other has a different partner");
+					}
+
+					if (other.memory.role !== role) {
+						clearPartner(creep, `the other is not the expected role. expected ${role} (got ${other.memory.role})`);
+					}
+
+					if (!creepInSameRemote(creep, other))  {
+						clearPartner(creep, `remotes do not match`);
+					}
+				} else {
+					creep.memory.partner = null;
+					if (other.memory.role === role && creepInSameRemote(creep, other)) {
+						partnerWithCreep(creep, other);
+					}
+				}
+			} else {
+				// if not, erase the partner's name
+				clearPartner(creep, "the other cannot partner");
+			}
+		}
+
+		// now try to reassign a partner
+		if (!creep.memory.partner) {
+			partnerWithRole(creepsByRole, creep, role);
+		}
+		return true;
+	}
+
+	export function run(env) {
 		if (Memory['creep_registrar'] === undefined) {
 			Memory['creep_registrar'] = {
 				timer: 0
@@ -143,6 +246,7 @@ namespace CreepRegistrar {
 			}
 			reg.timer = 60;
 		}
+		return env;
 	}
 }
 

@@ -2,7 +2,7 @@ import FindEnergyState from "./state.find_energy";
 
 namespace UpgraderRole {
 	/** @param {Creep} creep **/
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
 		switch (creep.memory.state) {
 			case 'enter.upgrade':
 				creep.say('upgrading');

@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+
 /**
  * The defense supervisor controls all owned towers.
  */
@@ -16,13 +18,18 @@ namespace DefenseSupervisor {
 	}
 
 	function tryRepairStructures(tower: StructureTower): boolean {
-		const damaged = <Structure>tower.pos.findClosestByRange(FIND_STRUCTURES, {
+		let damaged = <Structure[]>tower.room.find(FIND_STRUCTURES, {
 			filter: function(st: Structure) {
-				return (st.hits / st.hitsMax) < 0.90;
+				// towers are only interested in keeping structures alive
+				// repairers should raise them above 95%
+				return (st.hits / st.hitsMax) < 0.05;
 			}
 		});
-		if (damaged) {
-			switch (tower.repair(damaged)) {
+		damaged = _.sortBy(damaged, function(st) {
+			return st.hits / st.hitsMax;
+		});
+		if (damaged[0]) {
+			switch (tower.repair(damaged[0])) {
 				case OK:
 					return true;
 				case ERR_NOT_ENOUGH_RESOURCES:
@@ -61,7 +68,7 @@ namespace DefenseSupervisor {
 		});
 	}
 
-	export function run() {
+	export function run(state) {
 		for (let name in Game.rooms) {
 			const room = Game.rooms[name];
 			const towers = <StructureTower[]>room.find(FIND_MY_STRUCTURES, {

@@ -7,7 +7,7 @@ namespace FighterRole {
 	/**
 	 * @param {Creep} creep
 	 */
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
 		switch (creep.memory.state) {
 			case 'disband': {
 				DisbandAction.run(creep);
@@ -15,11 +15,12 @@ namespace FighterRole {
 			default: {
 				const hostile = <Creep>creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
 				if (hostile) {
+					if (creep.pos.getRangeTo(hostile) > 1) {
+						creep.moveTo(hostile);
+					}
 					switch (creep.attack(hostile)) {
 						case OK:
 							break;
-						default:
-							creep.moveTo(hostile);
 					}
 					Counters.work(creep);
 				} else {

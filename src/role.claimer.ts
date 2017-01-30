@@ -2,15 +2,22 @@ import * as _ from "lodash";
 import ClaimState from "./state.claim";
 import CartographyRepo from "./repo.cartography";
 
+/**
+ * memory: {
+ *   claimPos: {
+ *	   roomName: string,
+ *	   x: number,
+ *	   y: number
+ *	 }
+ * }
+ */
 namespace ClaimerRole {
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
 		switch (creep.memory.state) {
 			case 'return.home': {
 				const mem = creep.memory;
-				mem.targetRoom = creep.memory.homeRoom;
 				const parentCr = CartographyRepo.getRoomByName(mem.targetRoom);
-				mem.targetPos.x = parentCr.controller.pos.x;
-				mem.targetPos.y = parentCr.controller.pos.y;
+				mem.targetPos = _.clone(creep.memory.home);
 				mem.state = "moveto.room";
 			}	break;
 			case 'claim': {
@@ -45,7 +52,7 @@ namespace ClaimerRole {
 			}	break;
 			case 'moveto.room': {
 				const mem = creep.memory;
-				const rp = new RoomPosition(mem.targetPos.x, mem.targetPos.y, mem.targetRoom);
+				const rp = new RoomPosition(mem.targetPos.x, mem.targetPos.y, mem.targetPos.roomName);
 				if (creep.pos.roomName === rp.roomName) {
 					if (Math.abs(creep.pos.getRangeTo(rp.x, rp.y)) < 2) {
 						creep.memory.state = "claim";
@@ -69,8 +76,11 @@ namespace ClaimerRole {
 						//Game.map.findExit(creep.room, roomName);
 						const cr = CartographyRepo.getRoomByName(roomName);
 						if (cr && !cr.owner && cr.controller) {
-							creep.memory.targetRoom = cr.name;
-							creep.memory.targetPos = _.clone(cr.controller.pos);
+							creep.memory.targetPos = {
+								roomName: cr.name,
+								x: cr.controller.pos.x,
+								y: cr.controller.pos.y
+							};
 							creep.say(`clm ${cr.name}`);
 							creep.memory.state = "moveto.room";
 							break;

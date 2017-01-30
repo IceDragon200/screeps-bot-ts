@@ -1,7 +1,9 @@
 import * as _ from "lodash";
+import {ExtendedRoomPosition} from "./__types__";
 import Counters from "./counters";
 import CartographyRepo from "./repo.cartography";
 import IdleAction from "./action.idle";
+import RoleCommons from "./role_commons";
 
 namespace SurveyorRole {
 	function resetPosition(creep: Creep) {
@@ -32,22 +34,20 @@ namespace SurveyorRole {
 	}
 
 	function moveToRoute(creep: Creep, route) {
-		const target = <RoomObject>creep.pos.findClosestByRange(route);
-		if (target) {
-			const r = creep.moveTo(target);
-			switch (r) {
-				case OK:
-					break;
-				case ERR_BUSY:
-					Counters.sleep(creep, 3);
-					break;
-				default:
-					console.log(`Unhandled move ${r}`);
-			}
+		const r = RoleCommons.moveToRoute(creep, route);
+		switch (r) {
+			case OK:
+				return true;
+			case ERR_BUSY:
+				Counters.sleep(creep, 3);
+				return false;
+			default:
+				Counters.sleep(creep, 2);
+				console.log(`Unhandled move ${r}`);
 		}
 	}
 
-	export function run(creep: Creep) {
+	export function run(creep: Creep, env) {
 		const survey = creep.memory.survey;
 		switch (creep.memory.state) {
 			case 'start.return.home':
